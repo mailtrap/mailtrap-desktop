@@ -1,0 +1,28 @@
+appId: io.mailtrap.desktop
+productName: Mailtrap
+directories:
+  buildResources: resources
+  output: release
+files:
+  - dist/**/*
+  - resources/**/*
+mac:
+  category: public.app-category.developer-tools
+  icon: resources/icon.icns
+  target:
+    - dmg
+    - zip
+win:
+  icon: resources/icon.ico
+  target:
+    - nsis
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+linux:
+  icon: resources/icon.png
+  category: Development
+  target:
+    - AppImage
+    - deb
