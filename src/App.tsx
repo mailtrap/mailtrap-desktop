@@ -1,0 +1,88 @@
+import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAppStore } from './stores/appStore'
+import { useTrayNavigation } from './hooks/useNavigation'
+import Sidebar from './components/layout/Sidebar'
+import TitleBar from './components/layout/TitleBar'
+import TokenSetup from './components/auth/TokenSetup'
+import SendingDash from './components/sending/SendingDash'
+import InboxList from './components/sandbox/InboxList'
+import MessageList from './components/sandbox/MessageList'
+import EmailViewer from './components/sandbox/EmailViewer'
+import Settings from './components/settings/Settings'
+
+function AuthenticatedApp() {
+  useTrayNavigation()
+
+  const [defaultRoute, setDefaultRoute] = useState<string | null>(null)
+
+  useEffect(() => {
+    window.electron.getSettings().then((s: any) => {
+      const view = s?.defaultView === 'sending' ? '/sending' : '/sandbox'
+      setDefaultRoute(view)
+    })
+  }, [])
+
+  if (!defaultRoute) return null
+
+  return (
+    <div className="flex h-full">
+      <Sidebar />
+      <main className="flex-1 overflow-auto bg-navy-700">
+        <Routes>
+          <Route path="/sending" element={<SendingDash />} />
+          <Route path="/sending/:domainId" element={<SendingDash />} />
+          <Route path="/sandbox" element={<InboxList />} />
+          <Route path="/sandbox/inbox/:inboxId" element={<MessageList />} />
+          <Route
+            path="/sandbox/inbox/:inboxId/message/:messageId"
+            element={<EmailViewer />}
+          />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to={defaultRoute} replace />} />
+        </Routes>
+      </main>
+    </div>
+  )
+}
+
+export default function App() {
+  const { isAuthenticated, isLoading, setAuthenticated, setUnauthenticated } =
+    useAppStore()
+
+  useEffect(() => {
+    window.electron.restoreAuth().then((result) => {
+      if (result.authenticated && result.accountId) {
+        setAuthenticated(result.accountId, result.accountName)
+      } else {
+        setUnauthenticated()
+      }
+    })
+  }, [setAuthenticated, setUnauthenticated])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full flex-col bg-navy-800">
+        <TitleBar />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full flex-col bg-navy-800">
+      <TitleBar />
+      <div className="flex-1 overflow-hidden">
+        {isAuthenticated ? (
+          <AuthenticatedApp />
+        ) : (
+          <Routes>
+            <Route path="*" element={<TokenSetup />} />
+          </Routes>
+        )}
+      </div>
+    </div>
+  )
+}

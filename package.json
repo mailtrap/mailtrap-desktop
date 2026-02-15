@@ -1,0 +1,61 @@
+{
+  "name": "mailtrap-desktop",
+  "version": "0.1.0",
+  "description": "Desktop companion app for Mailtrap.io — sending stats and sandbox email viewer",
+  "main": "dist/electron/main.js",
+  "author": "Mailtrap",
+  "license": "MIT",
+  "scripts": {
+    "dev": "unset ELECTRON_RUN_AS_NODE && electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps",
+    "typecheck:electron": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:renderer": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:electron && npm run typecheck:renderer",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "date-fns": "^4.1.0",
+    "react-router-dom": "^7.1.0",
+    "recharts": "^2.15.0",
+    "zustand": "^5.0.0"
+  },
+  "build": {
+    "appId": "io.mailtrap.desktop",
+    "productName": "Mailtrap",
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "icon": "resources/icon.icns",
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "icon": "resources/icon.ico"
+    },
+    "linux": {
+      "icon": "resources/icon.png",
+      "category": "Development"
+    }
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.0",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.0",
+    "electron": "^40.4.1",
+    "electron-builder": "^25.0.0",
+    "electron-vite": "^3.0.0",
+    "postcss": "^8.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.7.0"
+  }
+}
