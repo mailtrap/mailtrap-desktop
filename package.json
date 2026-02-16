@@ -11,7 +11,7 @@
     "preview": "electron-vite preview",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps && node scripts/patch-dev-name.js",
     "typecheck:electron": "tsc --noEmit -p tsconfig.node.json",
     "typecheck:renderer": "tsc --noEmit -p tsconfig.web.json",
     "typecheck": "npm run typecheck:electron && npm run typecheck:renderer",
@@ -20,6 +20,7 @@
   "dependencies": {
     "axios": "^1.7.0",
     "date-fns": "^4.1.0",
+    "prismjs": "^1.30.0",
     "react-router-dom": "^7.1.0",
     "recharts": "^2.15.0",
     "zustand": "^5.0.0"
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^4.0.0",
+    "@types/prismjs": "^1.26.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.0",

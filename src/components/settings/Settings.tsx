@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../../stores/appStore'
+import { Button } from '../ui/Button'
 
 interface AppSettings {
   pollingIntervalMs: number
@@ -152,13 +153,14 @@ export default function Settings() {
               Remove your API token and log out
             </p>
           </div>
-          <button
+          <Button
+            variant="danger-outlined"
             onClick={handleLogout}
             disabled={loggingOut}
-            className="btn-danger-outlined disabled:opacity-50"
+            loading={loggingOut}
           >
             {loggingOut ? 'Logging out...' : 'Log out'}
-          </button>
+          </Button>
         </div>
       </div>
 

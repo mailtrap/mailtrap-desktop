@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Button } from '../ui/Button'
 
 interface InboxSummary {
   id: number
@@ -245,9 +246,7 @@ export default function InboxList() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
         <p className="text-body text-red-300">{error}</p>
-        <button onClick={fetchFresh} className="btn-primary">
-          Retry
-        </button>
+        <Button onClick={fetchFresh}>Retry</Button>
       </div>
     )
   }
@@ -303,7 +302,7 @@ export default function InboxList() {
             return (
               <div
                 key={projectName}
-                className="rounded-mtui border border-navy-300 bg-navy-600"
+                className="mtui-table-wrap"
               >
                 {/* Project header */}
                 <div className="flex items-center border-b border-navy-300">
@@ -315,7 +314,7 @@ export default function InboxList() {
                       {projectName}
                     </span>
                   </div>
-                  <div className="px-4 py-3 text-center" style={{ width: '88px' }}>
+                  <div className="flex items-center justify-end px-5 py-3" style={{ width: '88px' }}>
                     <Toggle
                       checked={allVisible}
                       indeterminate={indeterminate}
@@ -330,57 +329,43 @@ export default function InboxList() {
                 </div>
 
                 {/* Table */}
-                <table className="w-full">
+                <table className="mtui-table">
                   <thead>
-                    <tr className="border-b border-navy-300/50 text-left">
-                      <th className="px-5 py-2.5 text-item-label-s font-medium text-navy-100">
-                        Sandboxes
-                      </th>
-                      <th className="px-4 py-2.5 text-item-label-s font-medium text-navy-100">
-                        Total Sent
-                      </th>
-                      <th className="px-4 py-2.5 text-item-label-s font-medium text-navy-100">
-                        Messages
-                      </th>
-                      <th className="px-4 py-2.5 text-item-label-s font-medium text-navy-100">
-                        Last message
-                      </th>
-                      <th className="px-4 py-2.5 text-item-label-s font-medium text-navy-100">
-                        Last email subject
-                      </th>
-                      <th className="px-4 py-2.5 text-center text-item-label-s font-medium text-navy-100">
-                        Tray
-                      </th>
+                    <tr>
+                      <th>Sandboxes</th>
+                      <th>Total Sent</th>
+                      <th>Messages</th>
+                      <th>Last message</th>
+                      <th>Last email subject</th>
+                      <th className="w-[88px] text-right">Tray</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {projectInboxes.map((inbox, idx) => {
+                    {projectInboxes.map((inbox) => {
                       const isVisible = !hiddenIds.has(inbox.id)
                       return (
                         <tr
                           key={inbox.id}
-                          className={`transition-colors hover:bg-navy-500/50 ${
-                            idx < projectInboxes.length - 1 ? 'border-b border-navy-300/30' : ''
-                          }`}
+                          className="transition-colors hover:bg-navy-400/40"
                         >
                           {/* Sandbox name */}
-                          <td className="px-5 py-3">
+                          <td>
                             <Link
                               to={`/sandbox/inbox/${inbox.id}`}
-                              className="text-body text-blue-400 hover:text-blue-300 hover:underline"
+                              className="text-blue-400 hover:text-blue-300 hover:underline"
                             >
                               {inbox.name}
                             </Link>
                           </td>
 
                           {/* Total Sent */}
-                          <td className="px-4 py-3 text-body text-[#FBFCFC]">
+                          <td>
                             {inbox.sentCount}
                           </td>
 
                           {/* Messages (unread / total) */}
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1.5 text-body text-[#FBFCFC]">
+                          <td>
+                            <div className="flex items-center gap-1.5">
                               <svg className="h-4 w-4 text-navy-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                               </svg>
@@ -389,17 +374,17 @@ export default function InboxList() {
                           </td>
 
                           {/* Last message (time ago) */}
-                          <td className="px-4 py-3 text-body text-navy-100">
+                          <td className="!text-navy-100">
                             {timeAgo(inbox.lastMessageAt)}
                           </td>
 
                           {/* Last email subject */}
-                          <td className="max-w-[200px] truncate px-4 py-3 text-body text-navy-100">
+                          <td className="max-w-[200px] truncate !text-navy-100">
                             {inbox.lastEmailSubject || '—'}
                           </td>
 
                           {/* Tray visibility toggle */}
-                          <td className="px-4 py-3 text-center">
+                          <td className="text-right">
                             <Toggle
                               checked={isVisible}
                               onChange={() => toggleTrayVisibility(inbox.id)}

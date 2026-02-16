@@ -7,6 +7,9 @@ import {
   getMessages,
   getMessage,
   getMessageHtmlBody,
+  getMessageContentByPath,
+  getMessageSpamReport,
+  getMessageHtmlAnalysis,
   getInboxSummaries,
   toMessageSummary
 } from '../api/sandbox'
@@ -140,6 +143,35 @@ export function registerIpcHandlers(): void {
         // HTML body may not exist for some messages — return empty
         return ''
       }
+    }
+  )
+
+  ipcMain.handle(
+    'sandbox:get-message-content',
+    async (_event, path: string) => {
+      try {
+        return await getMessageContentByPath(path)
+      } catch {
+        return ''
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'sandbox:get-spam-report',
+    async (_event, inboxId: number, messageId: number) => {
+      const accountId = getAccountId()
+      if (!accountId) throw new Error('Not authenticated')
+      return await getMessageSpamReport(accountId, inboxId, messageId)
+    }
+  )
+
+  ipcMain.handle(
+    'sandbox:get-html-analysis',
+    async (_event, inboxId: number, messageId: number) => {
+      const accountId = getAccountId()
+      if (!accountId) throw new Error('Not authenticated')
+      return await getMessageHtmlAnalysis(accountId, inboxId, messageId)
     }
   )
 

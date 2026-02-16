@@ -7,8 +7,7 @@ import TitleBar from './components/layout/TitleBar'
 import TokenSetup from './components/auth/TokenSetup'
 import SendingDash from './components/sending/SendingDash'
 import InboxList from './components/sandbox/InboxList'
-import MessageList from './components/sandbox/MessageList'
-import EmailViewer from './components/sandbox/EmailViewer'
+import InboxView from './components/sandbox/InboxView'
 import Settings from './components/settings/Settings'
 
 function AuthenticatedApp() {
@@ -33,11 +32,7 @@ function AuthenticatedApp() {
           <Route path="/sending" element={<SendingDash />} />
           <Route path="/sending/:domainId" element={<SendingDash />} />
           <Route path="/sandbox" element={<InboxList />} />
-          <Route path="/sandbox/inbox/:inboxId" element={<MessageList />} />
-          <Route
-            path="/sandbox/inbox/:inboxId/message/:messageId"
-            element={<EmailViewer />}
-          />
+          <Route path="/sandbox/inbox/:inboxId" element={<InboxView />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={defaultRoute} replace />} />
         </Routes>

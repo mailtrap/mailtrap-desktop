@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Button } from '../ui/Button'
 
 interface MessageSummary {
   id: number
@@ -109,9 +110,7 @@ export default function MessageList() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
         <p className="text-body text-red-300">{error}</p>
-        <button onClick={() => fetchFreshMessages(1)} className="btn-primary">
-          Retry
-        </button>
+        <Button onClick={() => fetchFreshMessages(1)}>Retry</Button>
       </div>
     )
   }
@@ -203,13 +202,14 @@ export default function MessageList() {
         {/* Load more */}
         {hasMore && messages.length > 0 && (
           <div className="flex justify-center py-4">
-            <button
+            <Button
+              variant="dark-outline"
               onClick={() => fetchFreshMessages(page + 1)}
               disabled={loading}
-              className="btn-secondary disabled:opacity-50"
+              loading={loading}
             >
               {loading ? 'Loading...' : 'Load more'}
-            </button>
+            </Button>
           </div>
         )}
       </div>

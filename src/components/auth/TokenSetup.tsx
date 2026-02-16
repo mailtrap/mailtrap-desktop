@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '../../stores/appStore'
+import { Button } from '../ui/Button'
 
 export default function TokenSetup() {
   const [token, setToken] = useState('')
@@ -86,20 +87,14 @@ export default function TokenSetup() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+            loading={loading}
+            className="w-full"
           >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Connecting...
-              </span>
-            ) : (
-              'Connect'
-            )}
-          </button>
+            {loading ? 'Connecting...' : 'Connect'}
+          </Button>
         </form>
       </div>
     </div>
