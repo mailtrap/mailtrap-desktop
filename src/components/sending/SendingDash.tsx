@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import StatsCard from './StatsCard'
 import RateChart from './RateChart'
+import { Button } from '../ui/Button'
 
 interface Domain {
   id: number
@@ -354,9 +355,7 @@ export default function SendingDash() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
         <p className="text-body text-red-300">{error}</p>
-        <button onClick={fetchFreshDomains} className="btn-primary">
-          Retry
-        </button>
+        <Button onClick={fetchFreshDomains}>Retry</Button>
       </div>
     )
   }
@@ -456,12 +455,14 @@ export default function SendingDash() {
                 <p className="text-body-s text-orange-300">{statsError}</p>
               </div>
               {!statsError.includes('automatically') && !statsError.includes('cached') && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => fetchFreshStats(selectedDomain?.id ?? null, timeRange)}
-                  className="btn-ghost text-item-label-s text-orange-300"
+                  className="text-orange-300 hover:text-orange-200"
                 >
                   Retry
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -513,44 +514,44 @@ export default function SendingDash() {
                 <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {/* Mailbox Providers */}
                   {providerRows.length > 0 && (
-                    <div className="rounded-mtui border border-navy-300 bg-navy-500/50">
-                      <table className="w-full table-fixed text-left text-body-s">
+                    <div className="mtui-table-wrap">
+                      <table className="mtui-table table-fixed">
                         <thead>
-                          <tr className="border-b border-navy-300 text-navy-100">
-                            <th className="w-[28%] truncate px-2 py-2 font-medium">Mailbox Provi…</th>
-                            <th className="px-2 py-2 text-right font-medium">Delivered</th>
-                            <th className="px-2 py-2 text-right font-medium">Unique …</th>
-                            <th className="px-2 py-2 text-right font-medium">Click Rate</th>
-                            <th className="px-2 py-2 text-right font-medium">Bounce…</th>
-                            <th className="px-2 py-2 text-right font-medium">Spam C…</th>
+                          <tr>
+                            <th className="w-[28%] truncate">Mailbox Provi…</th>
+                            <th className="text-right">Delivered</th>
+                            <th className="text-right">Unique …</th>
+                            <th className="text-right">Click Rate</th>
+                            <th className="text-right">Bounce…</th>
+                            <th className="text-right">Spam C…</th>
                           </tr>
                         </thead>
                         <tbody>
                           {providerRows.map((row) => (
-                            <tr key={row.name} className="border-b border-navy-300/50 last:border-0">
-                              <td className="truncate px-2 py-2 text-blue-400" title={row.name}>{row.name}</td>
-                              <td className="px-2 py-2 text-right text-[#FBFCFC]">{formatCount(row.delivered)}</td>
-                              <td className="px-2 py-2 text-right text-[#FBFCFC]">{formatPercent(row.uniqueOpenRate)}</td>
-                              <td className="px-2 py-2 text-right text-[#FBFCFC]">{formatPercent(row.clickRate)}</td>
-                              <td className={`px-2 py-2 text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? 'text-red-400' : 'text-[#FBFCFC]'}`}>
+                            <tr key={row.name}>
+                              <td className="truncate !text-blue-400" title={row.name}>{row.name}</td>
+                              <td className="text-right">{formatCount(row.delivered)}</td>
+                              <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
+                              <td className="text-right">{formatPercent(row.clickRate)}</td>
+                              <td className={`text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? '!text-red-400' : ''}`}>
                                 {formatPercent(row.bounceRate)}
                               </td>
-                              <td className={`px-2 py-2 text-right ${row.spamCount > 0 ? 'text-red-400' : 'text-[#FBFCFC]'}`}>
+                              <td className={`text-right ${row.spamCount > 0 ? '!text-red-400' : ''}`}>
                                 {row.spamCount}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                      <div className="flex justify-end border-t border-navy-300/50 px-3 py-2">
+                      <div className="flex justify-end border-t border-navy-300 px-5 py-3">
                         <a
                           href={`${analyticsBase}?tab=mailbox_providers`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-body-s text-blue-400 hover:text-blue-300"
+                          className="inline-flex items-center gap-1 text-body text-blue-400 hover:text-blue-300"
                         >
                           See All
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                           </svg>
                         </a>
@@ -560,44 +561,44 @@ export default function SendingDash() {
 
                   {/* Category */}
                   {categoryRows.length > 0 && (
-                    <div className="rounded-mtui border border-navy-300 bg-navy-500/50">
-                      <table className="w-full table-fixed text-left text-body-s">
+                    <div className="mtui-table-wrap">
+                      <table className="mtui-table table-fixed">
                         <thead>
-                          <tr className="border-b border-navy-300 text-navy-100">
-                            <th className="w-[28%] truncate px-2 py-2 font-medium">Category</th>
-                            <th className="px-2 py-2 text-right font-medium">Delivered</th>
-                            <th className="px-2 py-2 text-right font-medium">Unique …</th>
-                            <th className="px-2 py-2 text-right font-medium">Click Rate</th>
-                            <th className="px-2 py-2 text-right font-medium">Bounce…</th>
-                            <th className="px-2 py-2 text-right font-medium">Spam C…</th>
+                          <tr>
+                            <th className="w-[28%] truncate">Category</th>
+                            <th className="text-right">Delivered</th>
+                            <th className="text-right">Unique …</th>
+                            <th className="text-right">Click Rate</th>
+                            <th className="text-right">Bounce…</th>
+                            <th className="text-right">Spam C…</th>
                           </tr>
                         </thead>
                         <tbody>
                           {categoryRows.map((row) => (
-                            <tr key={row.name} className="border-b border-navy-300/50 last:border-0">
-                              <td className="truncate px-2 py-2 text-blue-400" title={row.name}>{row.name}</td>
-                              <td className="px-2 py-2 text-right text-[#FBFCFC]">{formatCount(row.delivered)}</td>
-                              <td className="px-2 py-2 text-right text-[#FBFCFC]">{formatPercent(row.uniqueOpenRate)}</td>
-                              <td className="px-2 py-2 text-right text-[#FBFCFC]">{formatPercent(row.clickRate)}</td>
-                              <td className={`px-2 py-2 text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? 'text-red-400' : 'text-[#FBFCFC]'}`}>
+                            <tr key={row.name}>
+                              <td className="truncate !text-blue-400" title={row.name}>{row.name}</td>
+                              <td className="text-right">{formatCount(row.delivered)}</td>
+                              <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
+                              <td className="text-right">{formatPercent(row.clickRate)}</td>
+                              <td className={`text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? '!text-red-400' : ''}`}>
                                 {formatPercent(row.bounceRate)}
                               </td>
-                              <td className={`px-2 py-2 text-right ${row.spamCount > 0 ? 'text-red-400' : 'text-[#FBFCFC]'}`}>
+                              <td className={`text-right ${row.spamCount > 0 ? '!text-red-400' : ''}`}>
                                 {row.spamCount}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                      <div className="flex justify-end border-t border-navy-300/50 px-3 py-2">
+                      <div className="flex justify-end border-t border-navy-300 px-5 py-3">
                         <a
                           href={`${analyticsBase}?tab=categories`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-body-s text-blue-400 hover:text-blue-300"
+                          className="inline-flex items-center gap-1 text-body text-blue-400 hover:text-blue-300"
                         >
                           See All
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                           </svg>
                         </a>

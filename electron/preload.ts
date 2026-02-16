@@ -14,6 +14,9 @@ const api = {
   getMessages: (inboxId: number, page = 1) => ipcRenderer.invoke('sandbox:get-messages', inboxId, page),
   getMessage: (inboxId: number, messageId: number) => ipcRenderer.invoke('sandbox:get-message', inboxId, messageId),
   getMessageHtml: (inboxId: number, messageId: number) => ipcRenderer.invoke('sandbox:get-message-html', inboxId, messageId),
+  getMessageContent: (path: string) => ipcRenderer.invoke('sandbox:get-message-content', path),
+  getSpamReport: (inboxId: number, messageId: number) => ipcRenderer.invoke('sandbox:get-spam-report', inboxId, messageId),
+  getHtmlAnalysis: (inboxId: number, messageId: number) => ipcRenderer.invoke('sandbox:get-html-analysis', inboxId, messageId),
 
   // Tray visibility
   getHiddenTrayInboxIds: () => ipcRenderer.invoke('sandbox:get-hidden-tray-ids'),

@@ -71,10 +71,10 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `no-drag flex items-center gap-3 rounded-mtui px-3 py-2 text-item-label transition-colors ${
+              `no-drag flex items-center gap-3 rounded-mtui px-3 py-2 transition-colors ${
                 isActive
-                  ? 'bg-navy-400 text-white'
-                  : 'text-navy-100 hover:bg-navy-500 hover:text-white'
+                  ? 'bg-navy-400 text-white text-nav-item-active'
+                  : 'text-navy-100 text-nav-item hover:bg-navy-500 hover:text-white'
               }`
             }
           >

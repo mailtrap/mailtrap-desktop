@@ -31,7 +31,7 @@ export default function StatsCard({
       </div>
       <div className="flex items-baseline gap-2">
         <span
-          className={`text-2xl font-bold ${
+          className={`text-card-number ${
             isAboveThreshold ? 'text-red-300' : 'text-[#FBFCFC]'
           }`}
         >

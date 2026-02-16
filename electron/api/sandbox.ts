@@ -67,14 +67,46 @@ export async function getMessageHtmlBody(
   messageId: number
 ): Promise<string> {
   const client = getApiClient()
-  // First get the message to obtain its html_path
   const msg = await getMessage(accountId, inboxId, messageId)
   const htmlPath = msg.html_path
   if (!htmlPath) return ''
-  // Fetch the HTML body from the signed path
   const { data } = await client.get<string>(htmlPath, {
     headers: { Accept: 'text/html' }
   })
+  return data
+}
+
+/** Fetch content from a message path (html_source_path, txt_path, raw_path) */
+export async function getMessageContentByPath(path: string): Promise<string> {
+  if (!path) return ''
+  const client = getApiClient()
+  const { data } = await client.get<string>(path)
+  return typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+}
+
+/** Fetch spam report for a message */
+export async function getMessageSpamReport(
+  accountId: number,
+  inboxId: number,
+  messageId: number
+): Promise<unknown> {
+  const client = getApiClient()
+  const { data } = await client.get(
+    `/api/accounts/${accountId}/inboxes/${inboxId}/messages/${messageId}/spam_report`
+  )
+  return data
+}
+
+/** Fetch HTML analysis for a message */
+export async function getMessageHtmlAnalysis(
+  accountId: number,
+  inboxId: number,
+  messageId: number
+): Promise<unknown> {
+  const client = getApiClient()
+  const { data } = await client.get(
+    `/api/accounts/${accountId}/inboxes/${inboxId}/messages/${messageId}/analyze`
+  )
   return data
 }
 

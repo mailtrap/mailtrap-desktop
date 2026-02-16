@@ -1,0 +1,1 @@
+const e = require('electron'); console.log('type:', typeof e); console.log('keys:', Object.getOwnPropertyNames(e).slice(0,5)); if(e.app) { console.log('app exists!'); e.app.quit(); } else { console.log('NO APP'); process.exit(1); }

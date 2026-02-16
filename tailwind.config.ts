@@ -9,7 +9,8 @@ const config: Config = {
   darkMode: 'class',
   theme: {
     fontFamily: {
-      sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+      sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      mono: ['Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace']
     },
     extend: {
       colors: {
@@ -99,20 +100,43 @@ const config: Config = {
         }
       },
       fontSize: {
-        // MTUI Typography scale
-        'heading-1': ['22px', { lineHeight: '30px', letterSpacing: '-0.44px', fontWeight: '600' }],
-        'heading-2': ['16px', { lineHeight: '22px', letterSpacing: '-0.32px', fontWeight: '500' }],
-        'heading-3': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '600' }],
-        'body-l': ['16px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '400' }],
-        'body': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '400' }],
-        'body-s': ['12px', { lineHeight: '16px', letterSpacing: '0px', fontWeight: '400' }],
-        'button-label': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '600' }],
-        'item-label': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '500' }],
-        'item-label-s': ['12px', { lineHeight: '16px', letterSpacing: '0px', fontWeight: '500' }]
+        // MTUI Typography — matched to Figma Layout + MT product typography styles
+        // Headings
+        'heading-1': ['22px', { lineHeight: '26.63px', letterSpacing: '-0.44px', fontWeight: '600' }],
+        'heading-2': ['16px', { lineHeight: '19.36px', letterSpacing: '-0.32px', fontWeight: '600' }],
+        'heading-3': ['14px', { lineHeight: '16.94px', letterSpacing: '-0.28px', fontWeight: '600' }],
+        'heading-4': ['13px', { lineHeight: '15.73px', letterSpacing: '-0.26px', fontWeight: '600' }],
+        // Body
+        'body-l': ['16px', { lineHeight: '22px', letterSpacing: '-0.32px', fontWeight: '400' }],
+        'body': ['14px', { lineHeight: '19.32px', letterSpacing: '-0.28px', fontWeight: '400' }],
+        'body-m': ['13px', { lineHeight: '17.94px', letterSpacing: '-0.26px', fontWeight: '400' }],
+        'body-s': ['12px', { lineHeight: '16.56px', letterSpacing: '-0.24px', fontWeight: '400' }],
+        // Button / Item labels
+        'button-label': ['14px', { lineHeight: '19.32px', letterSpacing: '-0.28px', fontWeight: '500' }],
+        'item-label': ['14px', { lineHeight: '19.32px', letterSpacing: '-0.28px', fontWeight: '500' }],
+        'item-label-m': ['13px', { lineHeight: '17.94px', letterSpacing: '-0.26px', fontWeight: '500' }],
+        'item-label-s': ['12px', { lineHeight: '16.56px', letterSpacing: '-0.24px', fontWeight: '500' }],
+        // Bold variants
+        'bold-base': ['14px', { lineHeight: '19.32px', letterSpacing: '-0.28px', fontWeight: '600' }],
+        'bold-sm': ['13px', { lineHeight: '17.94px', letterSpacing: '-0.26px', fontWeight: '600' }],
+        'bold-xs': ['12px', { lineHeight: '16.56px', letterSpacing: '-0.24px', fontWeight: '600' }],
+        // Nav / Tabs (13px medium)
+        'nav-item': ['13px', { lineHeight: '17.94px', letterSpacing: '-0.26px', fontWeight: '500' }],
+        'nav-item-active': ['13px', { lineHeight: '17.94px', letterSpacing: '-0.26px', fontWeight: '600' }],
+        'tab': ['13px', { lineHeight: '17.94px', letterSpacing: '-0.26px', fontWeight: '500' }],
+        // Email list
+        'email-default': ['14px', { lineHeight: '19.32px', letterSpacing: '-0.28px', fontWeight: '600' }],
+        'email-active': ['14px', { lineHeight: '19.32px', letterSpacing: '-0.28px', fontWeight: '700' }],
+        'email-read': ['14px', { lineHeight: '19.32px', letterSpacing: '-0.28px', fontWeight: '400' }],
+        // Code
+        'code': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '400' }],
+        // Card number
+        'card-number': ['22px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '500' }]
       },
       borderRadius: {
         'mtui': '7px',      // buttons, nav items, cards
-        'mtui-input': '6px' // inputs, selects
+        'mtui-input': '6px', // inputs, selects
+        'mtui-table': '6px'  // table containers (Figma: table template radius=6)
       },
       boxShadow: {
         'mtui-box': '0 2px 4px rgba(66, 73, 100, 0.10)',
