@@ -105,7 +105,7 @@ export default function EmailViewer() {
   if (loading && !message) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-neutral border-t-transparent" />
       </div>
     )
   }
@@ -113,7 +113,7 @@ export default function EmailViewer() {
   if ((error || !message) && !message) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-        <p className="text-body text-red-300">{error || 'Message not found'}</p>
+        <p className="text-body text-red-medium">{error || 'Message not found'}</p>
         <Link to={`/sandbox/inbox/${inboxId}`} className="btn-primary">
           Back to inbox
         </Link>
@@ -132,49 +132,49 @@ export default function EmailViewer() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-navy-300 px-6 py-4">
+      <div className="border-b border-grey-dark px-6 py-4">
         <div className="mb-3 flex items-center gap-3">
           <Link
             to={`/sandbox/inbox/${inboxId}`}
-            className="rounded-mtui p-1.5 text-navy-100 transition-colors hover:bg-navy-500 hover:text-[#FBFCFC]"
+            className="rounded-mtui p-1.5 text-grey-muted transition-colors hover:bg-grey-bold hover:text-navy-air"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </Link>
-          <h1 className="text-heading-1 text-[#FBFCFC]">
+          <h1 className="text-heading-1 text-navy-air">
             {message.subject || '(no subject)'}
           </h1>
           {refreshing && (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-neutral border-t-transparent" />
           )}
         </div>
         <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 pl-10 text-body">
-          <span className="text-navy-100">From</span>
-          <span className="text-[#FBFCFC]">
+          <span className="text-grey-muted">From</span>
+          <span className="text-navy-air">
             {message.from_name ? `${message.from_name} <${message.from_email}>` : message.from_email}
           </span>
-          <span className="text-navy-100">To</span>
-          <span className="text-[#FBFCFC]">
+          <span className="text-grey-muted">To</span>
+          <span className="text-navy-air">
             {message.to_name ? `${message.to_name} <${message.to_email}>` : message.to_email}
           </span>
-          <span className="text-navy-100">Date</span>
-          <span className="text-[#FBFCFC]">
+          <span className="text-grey-muted">Date</span>
+          <span className="text-navy-air">
             {new Date(message.sent_at || message.created_at).toLocaleString()}
           </span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-0 border-b border-navy-300 px-6">
+      <div className="flex gap-0 border-b border-grey-dark px-6">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`border-b-2 px-4 py-2.5 text-item-label transition-colors ${
               activeTab === tab.key
-                ? 'border-blue-400 text-blue-400'
-                : 'border-transparent text-navy-100 hover:text-[#FBFCFC]'
+                ? 'border-blue-neutral text-blue-neutral'
+                : 'border-transparent text-grey-muted hover:text-navy-air'
             }`}
           >
             {tab.label}
@@ -187,7 +187,7 @@ export default function EmailViewer() {
           href={`https://mailtrap.io/inboxes/${inboxId}/messages/${messageId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-2.5 text-body-s text-navy-100 transition-colors hover:text-blue-400"
+          className="flex items-center gap-1.5 px-3 py-2.5 text-body-s text-grey-muted transition-colors hover:text-blue-neutral"
         >
           Open in Mailtrap
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -208,12 +208,12 @@ export default function EmailViewer() {
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <p className="text-body text-navy-100">No HTML content available for this message.</p>
+              <p className="text-body text-grey-muted">No HTML content available for this message.</p>
             </div>
           )
         )}
         {activeTab === 'text' && (
-          <pre className="whitespace-pre-wrap p-6 text-body text-[#FBFCFC]">
+          <pre className="whitespace-pre-wrap p-6 text-body text-navy-air">
             {message.text_body || 'No text content'}
           </pre>
         )}
@@ -233,11 +233,11 @@ export default function EmailViewer() {
 
 function HeaderRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex gap-4 rounded-mtui bg-navy-600 px-4 py-2.5">
-      <span className="w-20 shrink-0 text-item-label-s text-navy-100">
+    <div className="flex gap-4 rounded-mtui bg-grey-solid px-4 py-2.5">
+      <span className="w-20 shrink-0 text-item-label-s text-grey-muted">
         {label}
       </span>
-      <span className="text-body text-[#FBFCFC]">{value}</span>
+      <span className="text-body text-navy-air">{value}</span>
     </div>
   )
 }

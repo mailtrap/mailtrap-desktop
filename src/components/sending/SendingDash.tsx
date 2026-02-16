@@ -346,7 +346,7 @@ export default function SendingDash() {
   if (loading && domains.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-neutral border-t-transparent" />
       </div>
     )
   }
@@ -354,7 +354,7 @@ export default function SendingDash() {
   if (error && domains.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-        <p className="text-body text-red-300">{error}</p>
+        <p className="text-body text-red-medium">{error}</p>
         <Button onClick={fetchFreshDomains}>Retry</Button>
       </div>
     )
@@ -365,7 +365,7 @@ export default function SendingDash() {
       {/* Header */}
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-heading-1 text-[#FBFCFC]">Stats Overview</h1>
+          <h1 className="text-heading-1 text-navy-air">Stats Overview</h1>
           {/* Domain selector */}
           {domains.length > 0 && (
             <select
@@ -392,22 +392,22 @@ export default function SendingDash() {
 
         {/* Time range + date display */}
         <div className="flex items-center gap-3">
-          <div className="flex rounded-mtui border border-navy-300">
+          <div className="flex rounded-mtui border border-grey-dark">
             {(['7d', '30d'] as TimeRange[]).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
                 className={`px-3 py-1.5 text-item-label-s transition-colors ${
                   timeRange === range
-                    ? 'bg-blue-400/15 text-blue-400'
-                    : 'text-navy-100 hover:text-[#FBFCFC]'
+                    ? 'bg-blue-400/15 text-blue-neutral'
+                    : 'text-grey-muted hover:text-navy-air'
                 }`}
               >
                 {range === '7d' ? '7 days' : '30 days'}
               </button>
             ))}
           </div>
-          <span className="text-body-s text-navy-100">
+          <span className="text-body-s text-grey-muted">
             {new Date(Date.now() - (timeRange === '7d' ? 7 : 30) * 86400000).toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' })}
             {' - '}
             {new Date().toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' })}
@@ -429,14 +429,14 @@ export default function SendingDash() {
       )}
 
       {domains.length === 0 ? (
-        <div className="rounded-mtui border border-dashed border-navy-300 p-12 text-center">
-          <p className="text-body text-navy-100">
+        <div className="rounded-mtui border border-dashed border-grey-dark p-12 text-center">
+          <p className="text-body text-grey-muted">
             No sending domains found. Set up a domain in the{' '}
             <a
               href="https://mailtrap.io/sending/domains"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 underline hover:text-blue-300"
+              className="text-blue-neutral underline hover:text-blue-medium"
             >
               Mailtrap web app
             </a>
@@ -449,17 +449,17 @@ export default function SendingDash() {
           {statsError && !stats && (
             <div className="mb-4 flex items-center justify-between rounded-mtui border border-orange-300/30 bg-orange-300/10 px-4 py-3">
               <div className="flex items-center gap-2">
-                <svg className="h-4 w-4 shrink-0 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-4 w-4 shrink-0 text-orange-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                 </svg>
-                <p className="text-body-s text-orange-300">{statsError}</p>
+                <p className="text-body-s text-orange-medium">{statsError}</p>
               </div>
               {!statsError.includes('automatically') && !statsError.includes('cached') && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => fetchFreshStats(selectedDomain?.id ?? null, timeRange)}
-                  className="text-orange-300 hover:text-orange-200"
+                  className="text-orange-medium hover:text-orange-200"
                 >
                   Retry
                 </Button>
@@ -470,7 +470,7 @@ export default function SendingDash() {
           {/* Loading state */}
           {statsLoading && !stats && (
             <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-neutral border-t-transparent" />
             </div>
           )}
 
@@ -529,7 +529,7 @@ export default function SendingDash() {
                         <tbody>
                           {providerRows.map((row) => (
                             <tr key={row.name}>
-                              <td className="truncate !text-blue-400" title={row.name}>{row.name}</td>
+                              <td className="truncate !text-blue-neutral" title={row.name}>{row.name}</td>
                               <td className="text-right">{formatCount(row.delivered)}</td>
                               <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
                               <td className="text-right">{formatPercent(row.clickRate)}</td>
@@ -543,12 +543,12 @@ export default function SendingDash() {
                           ))}
                         </tbody>
                       </table>
-                      <div className="flex justify-end border-t border-navy-300 px-5 py-3">
+                      <div className="flex justify-end border-t border-grey-dark px-5 py-3">
                         <a
                           href={`${analyticsBase}?tab=mailbox_providers`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-body text-blue-400 hover:text-blue-300"
+                          className="inline-flex items-center gap-1 text-body text-blue-neutral hover:text-blue-medium"
                         >
                           See All
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -576,7 +576,7 @@ export default function SendingDash() {
                         <tbody>
                           {categoryRows.map((row) => (
                             <tr key={row.name}>
-                              <td className="truncate !text-blue-400" title={row.name}>{row.name}</td>
+                              <td className="truncate !text-blue-neutral" title={row.name}>{row.name}</td>
                               <td className="text-right">{formatCount(row.delivered)}</td>
                               <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
                               <td className="text-right">{formatPercent(row.clickRate)}</td>
@@ -590,12 +590,12 @@ export default function SendingDash() {
                           ))}
                         </tbody>
                       </table>
-                      <div className="flex justify-end border-t border-navy-300 px-5 py-3">
+                      <div className="flex justify-end border-t border-grey-dark px-5 py-3">
                         <a
                           href={`${analyticsBase}?tab=categories`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-body text-blue-400 hover:text-blue-300"
+                          className="inline-flex items-center gap-1 text-body text-blue-neutral hover:text-blue-medium"
                         >
                           See All
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -650,8 +650,8 @@ export default function SendingDash() {
           )}
 
           {!stats && !statsLoading && !statsError && (
-            <div className="rounded-mtui border border-dashed border-navy-300 p-12 text-center">
-              <p className="text-body text-navy-100">
+            <div className="rounded-mtui border border-dashed border-grey-dark p-12 text-center">
+              <p className="text-body text-grey-muted">
                 No sending stats available for this domain yet.
               </p>
             </div>
@@ -682,7 +682,7 @@ function LastUpdatedIndicator({
 
   return (
     <div
-      className="mb-4 flex items-center gap-2 text-body-s text-navy-200"
+      className="mb-4 flex items-center gap-2 text-body-s text-grey-deep"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -691,7 +691,7 @@ function LastUpdatedIndicator({
       ) : hovered ? (
         <button
           onClick={onRefresh}
-          className="flex h-3.5 w-3.5 items-center justify-center text-navy-100 transition-colors hover:text-blue-400"
+          className="flex h-3.5 w-3.5 items-center justify-center text-grey-muted transition-colors hover:text-blue-neutral"
           title="Refresh now"
         >
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -699,11 +699,11 @@ function LastUpdatedIndicator({
           </svg>
         </button>
       ) : showWarning ? (
-        <svg className="h-3.5 w-3.5 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-3.5 w-3.5 text-orange-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
         </svg>
       ) : (
-        <svg className="h-3.5 w-3.5 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-3.5 w-3.5 text-green-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
       )}

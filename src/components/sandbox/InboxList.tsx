@@ -52,12 +52,12 @@ function Toggle({
       title={title}
     >
       <div
-        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-mtui ease-mtui ${
           indeterminate
-            ? 'bg-blue-400/50'
+            ? 'bg-blue-neutral/50'
             : checked
-              ? 'bg-blue-400'
-              : 'bg-navy-300'
+              ? 'bg-blue-neutral'
+              : 'bg-grey-dark'
         }`}
       >
         <span
@@ -237,7 +237,7 @@ export default function InboxList() {
   if (loading && inboxes.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-neutral border-t-transparent" />
       </div>
     )
   }
@@ -245,7 +245,7 @@ export default function InboxList() {
   if (error && inboxes.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-        <p className="text-body text-red-300">{error}</p>
+        <p className="text-body text-red-medium">{error}</p>
         <Button onClick={fetchFresh}>Retry</Button>
       </div>
     )
@@ -262,7 +262,7 @@ export default function InboxList() {
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mb-1">
-        <h1 className="text-heading-1 text-[#FBFCFC]">Projects</h1>
+        <h1 className="text-heading-1 text-navy-air">Projects</h1>
       </div>
 
       {/* Last fetched indicator */}
@@ -276,14 +276,14 @@ export default function InboxList() {
       )}
 
       {inboxes.length === 0 ? (
-        <div className="rounded-mtui border border-dashed border-navy-300 p-12 text-center">
-          <p className="text-body text-navy-100">
+        <div className="rounded-mtui border border-dashed border-grey-dark p-12 text-center">
+          <p className="text-body text-grey-muted">
             No sandboxes found. Create one in the{' '}
             <a
               href="https://mailtrap.io/inboxes"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 underline hover:text-blue-300"
+              className="text-blue-neutral underline hover:text-blue-medium"
             >
               Mailtrap web app
             </a>
@@ -305,12 +305,12 @@ export default function InboxList() {
                 className="mtui-table-wrap"
               >
                 {/* Project header */}
-                <div className="flex items-center border-b border-navy-300">
+                <div className="flex items-center border-b border-grey-shade">
                   <div className="flex flex-1 items-center gap-2 px-5 py-3">
-                    <svg className="h-4 w-4 text-navy-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-4 w-4 text-grey-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                     </svg>
-                    <span className="text-item-label text-[#FBFCFC] font-semibold">
+                    <span className="text-item-label text-navy-air font-semibold">
                       {projectName}
                     </span>
                   </div>
@@ -346,13 +346,13 @@ export default function InboxList() {
                       return (
                         <tr
                           key={inbox.id}
-                          className="transition-colors hover:bg-navy-400/40"
+                          className="transition-colors duration-mtui ease-mtui hover:bg-grey-shade/40"
                         >
                           {/* Sandbox name */}
                           <td>
                             <Link
                               to={`/sandbox/inbox/${inbox.id}`}
-                              className="text-blue-400 hover:text-blue-300 hover:underline"
+                              className="text-blue-neutral hover:text-blue-medium hover:underline"
                             >
                               {inbox.name}
                             </Link>
@@ -366,7 +366,7 @@ export default function InboxList() {
                           {/* Messages (unread / total) */}
                           <td>
                             <div className="flex items-center gap-1.5">
-                              <svg className="h-4 w-4 text-navy-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <svg className="h-4 w-4 text-grey-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                               </svg>
                               {inbox.unreadCount} / {inbox.totalCount}
@@ -374,12 +374,12 @@ export default function InboxList() {
                           </td>
 
                           {/* Last message (time ago) */}
-                          <td className="!text-navy-100">
+                          <td className="!text-grey-muted">
                             {timeAgo(inbox.lastMessageAt)}
                           </td>
 
                           {/* Last email subject */}
-                          <td className="max-w-[200px] truncate !text-navy-100">
+                          <td className="max-w-[200px] truncate !text-grey-muted">
                             {inbox.lastEmailSubject || '—'}
                           </td>
 
@@ -422,16 +422,16 @@ function LastUpdatedIndicator({
 
   return (
     <div
-      className="mb-4 flex items-center gap-2 text-body-s text-navy-200"
+      className="mb-4 flex items-center gap-2 text-body-s text-grey-deep"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {refreshing ? (
-        <div className="h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-navy-100 border-t-transparent" />
+        <div className="h-3.5 w-3.5 animate-spin rounded-full border-[1.5px] border-grey-muted border-t-transparent" />
       ) : hovered ? (
         <button
           onClick={onRefresh}
-          className="flex h-3.5 w-3.5 items-center justify-center text-navy-100 transition-colors hover:text-blue-400"
+          className="flex h-3.5 w-3.5 items-center justify-center text-grey-muted transition-colors duration-mtui ease-mtui hover:text-blue-neutral"
           title="Refresh now"
         >
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -439,11 +439,11 @@ function LastUpdatedIndicator({
           </svg>
         </button>
       ) : isStaleCache ? (
-        <svg className="h-3.5 w-3.5 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-3.5 w-3.5 text-orange-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
         </svg>
       ) : (
-        <svg className="h-3.5 w-3.5 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="h-3.5 w-3.5 text-green-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
       )}

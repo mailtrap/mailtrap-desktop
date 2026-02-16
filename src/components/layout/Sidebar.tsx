@@ -55,7 +55,7 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-52 shrink-0 flex-col border-r border-navy-300 bg-navy-800">
+    <aside className="flex w-52 shrink-0 flex-col border-r border-grey-shade bg-navy-void">
       {/* Spacer for title bar drag area */}
       <div className="h-4 shrink-0" />
 
@@ -71,10 +71,10 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `no-drag flex items-center gap-3 rounded-mtui px-3 py-2 transition-colors ${
+              `no-drag flex items-center gap-3 rounded-mtui px-3 py-2 transition-colors duration-mtui ease-mtui ${
                 isActive
-                  ? 'bg-navy-400 text-white text-nav-item-active'
-                  : 'text-navy-100 text-nav-item hover:bg-navy-500 hover:text-white'
+                  ? 'bg-grey-shade text-white text-nav-item-active'
+                  : 'text-grey-muted text-nav-item hover:bg-grey-shade hover:text-white'
               }`
             }
           >

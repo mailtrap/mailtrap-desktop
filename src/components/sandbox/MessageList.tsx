@@ -101,7 +101,7 @@ export default function MessageList() {
   if (loading && messages.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-neutral border-t-transparent" />
       </div>
     )
   }
@@ -109,7 +109,7 @@ export default function MessageList() {
   if (error && messages.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-        <p className="text-body text-red-300">{error}</p>
+        <p className="text-body text-red-medium">{error}</p>
         <Button onClick={() => fetchFreshMessages(1)}>Retry</Button>
       </div>
     )
@@ -118,21 +118,21 @@ export default function MessageList() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-navy-300 px-6 py-4">
+      <div className="flex items-center gap-3 border-b border-grey-dark px-6 py-4">
         <Link
           to="/sandbox"
-          className="rounded-mtui p-1.5 text-navy-100 transition-colors hover:bg-navy-500 hover:text-[#FBFCFC]"
+          className="rounded-mtui p-1.5 text-grey-muted transition-colors hover:bg-grey-bold hover:text-navy-air"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="text-heading-2 text-[#FBFCFC]">Inbox</h1>
-        <span className="text-body-s text-navy-100">
+        <h1 className="text-heading-2 text-navy-air">Inbox</h1>
+        <span className="text-body-s text-grey-muted">
           {messages.length} messages
         </span>
         {refreshing && (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-neutral border-t-transparent" />
         )}
       </div>
 
@@ -140,22 +140,22 @@ export default function MessageList() {
       <div className="flex-1 overflow-auto">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-body text-navy-100">
+            <p className="text-body text-grey-muted">
               No messages yet. Send a test email to this inbox.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy-300/50">
+          <div className="divide-y divide-grey-dark/50">
             {messages.map((msg) => (
               <Link
                 key={msg.id}
                 to={`/sandbox/inbox/${inboxId}/message/${msg.id}`}
-                className="flex items-center gap-4 px-6 py-3 transition-colors hover:bg-navy-600"
+                className="flex items-center gap-4 px-6 py-3 transition-colors hover:bg-grey-solid"
               >
                 {/* Unread dot */}
                 <div className="w-2 shrink-0">
                   {!msg.isRead && (
-                    <div className="h-2 w-2 rounded-full bg-blue-400" />
+                    <div className="h-2 w-2 rounded-full bg-blue-neutral" />
                   )}
                 </div>
 
@@ -164,8 +164,8 @@ export default function MessageList() {
                   <span
                     className={`text-body ${
                       !msg.isRead
-                        ? 'font-semibold text-[#FBFCFC]'
-                        : 'text-navy-100'
+                        ? 'font-semibold text-navy-air'
+                        : 'text-grey-muted'
                     }`}
                   >
                     {msg.fromName || msg.fromEmail}
@@ -177,8 +177,8 @@ export default function MessageList() {
                   <span
                     className={`text-body ${
                       !msg.isRead
-                        ? 'font-medium text-[#FBFCFC]'
-                        : 'text-navy-100'
+                        ? 'font-medium text-navy-air'
+                        : 'text-grey-muted'
                     }`}
                   >
                     {msg.subject || '(no subject)'}
@@ -186,12 +186,12 @@ export default function MessageList() {
                 </div>
 
                 {/* Date */}
-                <div className="shrink-0 text-body-s text-navy-200">
+                <div className="shrink-0 text-body-s text-grey-deep">
                   {formatDate(msg.sentAt)}
                 </div>
 
                 {/* Size */}
-                <div className="shrink-0 text-body-s text-navy-200">
+                <div className="shrink-0 text-body-s text-grey-deep">
                   {msg.size}
                 </div>
               </Link>
