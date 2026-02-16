@@ -192,6 +192,12 @@ export default function SendingDash() {
       if (cached && cached.stats) {
         setStats(cached.stats as unknown as Stats)
         setDailyStats(cached.dailyStats as unknown as DailyData[])
+        if (Array.isArray(cached.providerRows) && cached.providerRows.length > 0) {
+          setProviderRows(cached.providerRows as ProviderRow[])
+        }
+        if (Array.isArray(cached.categoryRows) && cached.categoryRows.length > 0) {
+          setCategoryRows(cached.categoryRows as CategoryRow[])
+        }
         setLastFetchedAt(cached.fetchedAt)
         setIsFromCache(true)
         setStatsLoading(false)
@@ -270,6 +276,30 @@ export default function SendingDash() {
         )
       }
 
+      // Build fresh provider/category arrays for caching
+      const freshProviders = providerResult.ok && Array.isArray(providerResult.data)
+        ? providerResult.data.map((p: any) => ({
+            name: p.email_service_provider,
+            delivered: p.stats.delivery_count,
+            uniqueOpenRate: p.stats.open_rate,
+            clickRate: p.stats.click_rate,
+            bounceRate: p.stats.bounce_rate,
+            spamCount: p.stats.spam_count
+          }))
+        : undefined
+      const freshCategories = categoryResult.ok && Array.isArray(categoryResult.data)
+        ? categoryResult.data
+            .filter((c: any) => c.category !== '')
+            .map((c: any) => ({
+              name: c.category,
+              delivered: c.stats.delivery_count,
+              uniqueOpenRate: c.stats.open_rate,
+              clickRate: c.stats.click_rate,
+              bounceRate: c.stats.bounce_rate,
+              spamCount: c.stats.spam_count
+            }))
+        : undefined
+
       // Main stats & daily data
       if (statsResult.ok && dailyResult.ok) {
         setStats(statsResult.data as unknown as Stats)
@@ -279,7 +309,7 @@ export default function SendingDash() {
         setRateLimited(false)
 
         const cacheKey = domainId ?? 0
-        window.electron.saveSendingStatsCache(cacheKey, range, statsResult.data, dailyResult.data)
+        window.electron.saveSendingStatsCache(cacheKey, range, statsResult.data, dailyResult.data, freshProviders, freshCategories)
       } else {
         const failedErr = !statsResult.ok ? statsResult.error : !dailyResult.ok ? dailyResult.error : null
         const message = failedErr instanceof Error ? failedErr.message : String(failedErr ?? '')
@@ -390,8 +420,13 @@ export default function SendingDash() {
           )}
         </div>
 
-        {/* Time range + date display */}
+        {/* Date display + time range toggle */}
         <div className="flex items-center gap-3">
+          <span className="text-body-s text-grey-muted">
+            {new Date(Date.now() - (timeRange === '7d' ? 7 : 30) * 86400000).toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' })}
+            {' - '}
+            {new Date().toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' })}
+          </span>
           <div className="flex rounded-mtui border border-grey-dark">
             {(['7d', '30d'] as TimeRange[]).map((range) => (
               <button
@@ -407,11 +442,6 @@ export default function SendingDash() {
               </button>
             ))}
           </div>
-          <span className="text-body-s text-grey-muted">
-            {new Date(Date.now() - (timeRange === '7d' ? 7 : 30) * 86400000).toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' })}
-            {' - '}
-            {new Date().toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' })}
-          </span>
         </div>
       </div>
 
@@ -514,41 +544,43 @@ export default function SendingDash() {
                 <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {/* Mailbox Providers */}
                   {providerRows.length > 0 && (
-                    <div className="mtui-table-wrap">
-                      <table className="mtui-table table-fixed">
-                        <thead>
-                          <tr>
-                            <th className="w-[28%] truncate">Mailbox Provi…</th>
-                            <th className="text-right">Delivered</th>
-                            <th className="text-right">Unique …</th>
-                            <th className="text-right">Click Rate</th>
-                            <th className="text-right">Bounce…</th>
-                            <th className="text-right">Spam C…</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {providerRows.map((row) => (
-                            <tr key={row.name}>
-                              <td className="truncate !text-blue-neutral" title={row.name}>{row.name}</td>
-                              <td className="text-right">{formatCount(row.delivered)}</td>
-                              <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
-                              <td className="text-right">{formatPercent(row.clickRate)}</td>
-                              <td className={`text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? '!text-red-400' : ''}`}>
-                                {formatPercent(row.bounceRate)}
-                              </td>
-                              <td className={`text-right ${row.spamCount > 0 ? '!text-red-400' : ''}`}>
-                                {row.spamCount}
-                              </td>
+                    <div>
+                      <div className="mtui-table-wrap">
+                        <table className="mtui-table table-fixed">
+                          <thead>
+                            <tr>
+                              <th className="w-[28%] truncate">Mailbox Provi…</th>
+                              <th className="text-right">Delivered</th>
+                              <th className="text-right">Unique …</th>
+                              <th className="text-right">Click Rate</th>
+                              <th className="text-right">Bounce…</th>
+                              <th className="text-right">Spam C…</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <div className="flex justify-end border-t border-grey-dark px-5 py-3">
+                          </thead>
+                          <tbody>
+                            {providerRows.map((row) => (
+                              <tr key={row.name}>
+                                <td className="truncate !text-blue-neutral" title={row.name}>{row.name}</td>
+                                <td className="text-right">{formatCount(row.delivered)}</td>
+                                <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
+                                <td className="text-right">{formatPercent(row.clickRate)}</td>
+                                <td className={`text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? '!text-red-400' : ''}`}>
+                                  {formatPercent(row.bounceRate)}
+                                </td>
+                                <td className={`text-right ${row.spamCount > 0 ? '!text-red-400' : ''}`}>
+                                  {row.spamCount}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="flex justify-end px-1 py-2">
                         <a
                           href={`${analyticsBase}?tab=mailbox_providers`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-body text-blue-neutral hover:text-blue-medium"
+                          className="inline-flex items-center gap-1 text-body-s text-blue-neutral hover:text-blue-medium"
                         >
                           See All
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -561,41 +593,43 @@ export default function SendingDash() {
 
                   {/* Category */}
                   {categoryRows.length > 0 && (
-                    <div className="mtui-table-wrap">
-                      <table className="mtui-table table-fixed">
-                        <thead>
-                          <tr>
-                            <th className="w-[28%] truncate">Category</th>
-                            <th className="text-right">Delivered</th>
-                            <th className="text-right">Unique …</th>
-                            <th className="text-right">Click Rate</th>
-                            <th className="text-right">Bounce…</th>
-                            <th className="text-right">Spam C…</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {categoryRows.map((row) => (
-                            <tr key={row.name}>
-                              <td className="truncate !text-blue-neutral" title={row.name}>{row.name}</td>
-                              <td className="text-right">{formatCount(row.delivered)}</td>
-                              <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
-                              <td className="text-right">{formatPercent(row.clickRate)}</td>
-                              <td className={`text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? '!text-red-400' : ''}`}>
-                                {formatPercent(row.bounceRate)}
-                              </td>
-                              <td className={`text-right ${row.spamCount > 0 ? '!text-red-400' : ''}`}>
-                                {row.spamCount}
-                              </td>
+                    <div>
+                      <div className="mtui-table-wrap">
+                        <table className="mtui-table table-fixed">
+                          <thead>
+                            <tr>
+                              <th className="w-[28%] truncate">Category</th>
+                              <th className="text-right">Delivered</th>
+                              <th className="text-right">Unique …</th>
+                              <th className="text-right">Click Rate</th>
+                              <th className="text-right">Bounce…</th>
+                              <th className="text-right">Spam C…</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <div className="flex justify-end border-t border-grey-dark px-5 py-3">
+                          </thead>
+                          <tbody>
+                            {categoryRows.map((row) => (
+                              <tr key={row.name}>
+                                <td className="truncate !text-blue-neutral" title={row.name}>{row.name}</td>
+                                <td className="text-right">{formatCount(row.delivered)}</td>
+                                <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
+                                <td className="text-right">{formatPercent(row.clickRate)}</td>
+                                <td className={`text-right ${row.bounceRate * 100 > BOUNCE_THRESHOLD ? '!text-red-400' : ''}`}>
+                                  {formatPercent(row.bounceRate)}
+                                </td>
+                                <td className={`text-right ${row.spamCount > 0 ? '!text-red-400' : ''}`}>
+                                  {row.spamCount}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="flex justify-end px-1 py-2">
                         <a
                           href={`${analyticsBase}?tab=categories`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-body text-blue-neutral hover:text-blue-medium"
+                          className="inline-flex items-center gap-1 text-body-s text-blue-neutral hover:text-blue-medium"
                         >
                           See All
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

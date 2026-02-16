@@ -32,8 +32,8 @@ const api = {
   getStreamSummaries: () => ipcRenderer.invoke('sending:get-stream-summaries'),
 
   // Sending stats cache
-  saveSendingStatsCache: (domainId: number, timeRange: string, stats: unknown, dailyStats: unknown) =>
-    ipcRenderer.invoke('sending:save-stats-cache', domainId, timeRange, stats, dailyStats),
+  saveSendingStatsCache: (domainId: number, timeRange: string, stats: unknown, dailyStats: unknown, providerRows?: unknown, categoryRows?: unknown) =>
+    ipcRenderer.invoke('sending:save-stats-cache', domainId, timeRange, stats, dailyStats, providerRows, categoryRows),
   getSendingStatsCache: (domainId: number, timeRange: string) =>
     ipcRenderer.invoke('sending:get-stats-cache', domainId, timeRange),
 
