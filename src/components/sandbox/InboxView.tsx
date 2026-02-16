@@ -830,15 +830,15 @@ function TechInfoView({
           <div className="overflow-hidden rounded-mtui border border-grey-dark/40">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-grey-dark/30 bg-grey-void">
+                <tr className="border-b border-grey-shade bg-grey-bold">
                   <th className="w-[20%] px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Name</th>
                   <th className="px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Value</th>
                   <th className="w-16 py-[5px]"></th>
                 </tr>
               </thead>
               <tbody>
-                {smtpRows.map((row) => (
-                  <tr key={row.name} className="border-b border-grey-dark/15 last:border-0">
+                {smtpRows.map((row, i) => (
+                  <tr key={row.name} className={`border-b border-grey-dark/15 last:border-0 ${i % 2 === 0 ? 'bg-grey-shade' : 'bg-grey-bold'}`}>
                     <td className="px-[10px] py-[5px] text-sm text-navy-air" style={{ minHeight: 38 }}>{row.name}</td>
                     <td className="px-[10px] py-[5px] text-sm text-navy-air" style={{ minHeight: 38 }}>{row.value}</td>
                     <td className="py-[5px] pr-[10px] text-right">
@@ -904,7 +904,7 @@ function EmailHeadersTable({
     <div className="overflow-hidden rounded-mtui border border-grey-dark/40">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b border-grey-dark/30 bg-grey-void">
+          <tr className="border-b border-grey-shade bg-grey-bold">
             <th className="w-[20%] px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Name</th>
             <th className="px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Value</th>
             <th className="w-16 py-[5px]"></th>
@@ -912,9 +912,10 @@ function EmailHeadersTable({
         </thead>
         <tbody>
           {allRows.map((row, i) => {
+            const zebraBg = i % 2 === 0 ? 'bg-grey-shade' : 'bg-grey-bold'
             if (row.type === 'bcc-notice') {
               return (
-                <tr key="bcc-notice" className={`border-b border-grey-dark/15 ${i % 2 !== 0 ? 'bg-grey-bold' : ''}`}>
+                <tr key="bcc-notice" className={`border-b border-grey-dark/15 ${zebraBg}`}>
                   <td colSpan={3} className="py-[5px] text-center" style={{ minHeight: 38 }}>
                     <span className="inline-flex items-center gap-1.5 text-sm text-grey-muted">
                       <svg className="h-4 w-4 text-green-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -929,7 +930,7 @@ function EmailHeadersTable({
             return (
               <tr
                 key={row.name + i}
-                className={`border-b border-grey-dark/15 last:border-0 ${i % 2 !== 0 ? 'bg-grey-bold' : ''}`}
+                className={`border-b border-grey-dark/15 last:border-0 ${zebraBg}`}
               >
                 <td className="px-[10px] py-[5px] text-sm text-navy-air" style={{ minHeight: 38 }}>{row.name}</td>
                 <td className="max-w-0 truncate px-[10px] py-[5px] text-sm text-navy-air" title={row.value} style={{ minHeight: 38 }}>

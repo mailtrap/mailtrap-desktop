@@ -251,8 +251,8 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(
     'sending:save-stats-cache',
-    (_event, domainId: number, timeRange: string, stats: unknown, dailyStats: unknown) => {
-      saveSendingStatsCache(domainId, timeRange, stats, dailyStats)
+    (_event, domainId: number, timeRange: string, stats: unknown, dailyStats: unknown, providerRows?: unknown, categoryRows?: unknown) => {
+      saveSendingStatsCache(domainId, timeRange, stats, dailyStats, providerRows, categoryRows)
       return { success: true }
     }
   )

@@ -13,6 +13,8 @@ function getStorePath(): string {
 interface CachedSendingStats {
   stats: unknown
   dailyStats: unknown
+  providerRows?: unknown
+  categoryRows?: unknown
   fetchedAt: string // ISO timestamp
 }
 
@@ -168,13 +170,17 @@ export function saveSendingStatsCache(
   domainId: number,
   timeRange: string,
   stats: unknown,
-  dailyStats: unknown
+  dailyStats: unknown,
+  providerRows?: unknown,
+  categoryRows?: unknown
 ): void {
   const store = readStore()
   if (!store.sendingStatsCache) store.sendingStatsCache = {}
   store.sendingStatsCache[`${domainId}_${timeRange}`] = {
     stats,
     dailyStats,
+    providerRows,
+    categoryRows,
     fetchedAt: new Date().toISOString()
   }
   writeStore(store)

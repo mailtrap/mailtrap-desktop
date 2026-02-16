@@ -214,53 +214,97 @@
     @apply w-full border-collapse;
   }
 
-  /* Head row — border.light, background.primary, font bold */
+  /* Head row — same as container bg, font bold */
   .mtui-table thead th {
-    min-height: 46px;
+    min-height: 50px;
     padding: 5px 10px;
     text-align: left;
     font-size: 14px;
     font-weight: 600;
     color: #fbfcfc; /* foreground.primary (dark) */
-    background: #131e2b; /* grey.void = background.primary (dark) */
+    background: #172230; /* grey.bold — same as container bg */
   }
 
   .mtui-table thead tr {
+    height: 50px;
     border-bottom: 1px solid #212d3c; /* border.light (dark) = grey.shade */
   }
 
   /* Data cells */
   .mtui-table tbody td {
-    min-height: 46px;
+    min-height: 50px;
     padding: 5px 10px;
     font-size: 14px;
     font-weight: 400;
     color: #fbfcfc;
   }
 
+  /* Zebra: odd rows lighter, even rows same as bg */
   .mtui-table tbody tr {
+    height: 50px;
     border-bottom: 1px solid rgba(33, 45, 60, 0.5); /* border.light subtle */
-    background: #131e2b; /* background.primary (dark) = grey.void */
+    background: #212d3c; /* grey.shade — lighter row (odd) */
   }
 
   .mtui-table tbody tr:last-child {
     border-bottom: none;
   }
 
-  /* Zebra stripe: even rows use background.secondary */
   .mtui-table tbody tr:nth-child(even) {
-    background: #172230; /* grey.bold = background.secondary (dark) */
+    background: #172230; /* grey.bold — same as container bg */
   }
 
-  /* ── MTUI Input base — dark mode ── */
+  /* ── MTUI InputBase — dark mode ──
+   *  Source: app/styles/components/inputBase/index.js
+   *  border: border.subtle (grey.dark #2c3a4b)
+   *  bg: background.primary (grey.void #0f1922)
+   *  padding: 6px 10px
+   *  border-radius: 7px
+   *  font-size: 14px, line-height: 1.3rem
+   */
   .input {
-    @apply w-full rounded-mtui border border-grey-shade bg-grey-solid px-3 py-2 text-body text-navy-air placeholder-grey-muted transition-colors duration-mtui ease-mtui;
-    @apply focus:border-blue-neutral focus:outline-none focus:ring-2 focus:ring-blue-neutral/20;
-    @apply disabled:bg-navy-void disabled:text-grey-deep;
+    @apply w-full rounded-mtui border text-body text-navy-air placeholder-grey-muted transition-colors duration-mtui ease-mtui;
+    @apply focus:outline-none;
+    border-color: #2c3a4b;   /* border.subtle = grey.dark */
+    background-color: #0f1922; /* background.primary = grey.void */
+    padding: 6px 10px;
+    line-height: 1.3rem;
+  }
+
+  .input:focus {
+    border-color: #4c83ee; /* border.accent = blue.neutral */
+    box-shadow: 0 0 4px rgba(76, 131, 238, 0.5); /* blue.neutral glow */
+  }
+
+  .input:disabled {
+    border-color: #2c3a4b;
+    background-color: #172230; /* background.secondary = grey.bold */
+    color: #4b5d72;           /* foreground.disabled = grey.deep */
+    cursor: not-allowed;
+    pointer-events: none;
   }
 
   .input-error {
-    @apply input border-red-medium focus:border-red-medium focus:ring-red-medium/20;
+    border-color: #fb5151; /* red.medium */
+  }
+  .input-error:focus {
+    border-color: #fb5151;
+    box-shadow: 0 0 4px rgba(251, 81, 81, 0.5);
+  }
+
+  /* ── MTUI Select — dark mode ──
+   *  Source: app/styles/components/select/index.js
+   *  Extends InputBase with height 34px, custom arrow, appearance none
+   */
+  select.input {
+    height: 34px;
+    padding-right: 25px;
+    appearance: none;
+    color-scheme: dark;
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23FFFFFF' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 8px 10px;
   }
 }
 
