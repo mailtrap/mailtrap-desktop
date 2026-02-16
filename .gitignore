@@ -12,6 +12,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Build output
+storybook-static/
+
 # Logs
 *.log
 npm-debug.log*

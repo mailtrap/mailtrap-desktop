@@ -20,12 +20,12 @@ interface SparklineProps {
   data: DailyData[]
 }
 
-// MTUI dark mode color tokens
-const BLUE_400 = '#4C83EE'
-const GREEN_300 = '#22D172'
-const NAVY_300 = '#2A394B'
-const NAVY_100 = '#687A91'
-const NAVY_800 = '#101A26'
+/* MTUI coreColors — dark theme semantic mapping */
+const BLUE_NEUTRAL = '#4c83ee'  // blue.neutral — foreground.accent (dark)
+const GREEN_MEDIUM = '#22d172'  // green.medium — foreground.success (dark)
+const GREY_DARK    = '#2a394b'  // grey.dark   — border.subtle (dark)
+const GREY_MUTED   = '#687a91'  // grey.muted  — foreground.secondary (dark)
+const NAVY_VOID    = '#101a26'  // navy.void   — background.strong (dark)
 
 export default function Sparkline({ data }: SparklineProps) {
   const formatted = data.map((d) => ({
@@ -42,41 +42,41 @@ export default function Sparkline({ data }: SparklineProps) {
       <AreaChart data={formatted} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
         <defs>
           <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={BLUE_400} stopOpacity={0.25} />
-            <stop offset="100%" stopColor={BLUE_400} stopOpacity={0} />
+            <stop offset="0%" stopColor={BLUE_NEUTRAL} stopOpacity={0.25} />
+            <stop offset="100%" stopColor={BLUE_NEUTRAL} stopOpacity={0} />
           </linearGradient>
           <linearGradient id="deliveredGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={GREEN_300} stopOpacity={0.25} />
-            <stop offset="100%" stopColor={GREEN_300} stopOpacity={0} />
+            <stop offset="0%" stopColor={GREEN_MEDIUM} stopOpacity={0.25} />
+            <stop offset="100%" stopColor={GREEN_MEDIUM} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke={NAVY_300} vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={GREY_DARK} vertical={false} />
         <XAxis
           dataKey="dateLabel"
-          tick={{ fontSize: 12, fill: NAVY_100 }}
+          tick={{ fontSize: 12, fill: GREY_MUTED }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 12, fill: NAVY_100 }}
+          tick={{ fontSize: 12, fill: GREY_MUTED }}
           axisLine={false}
           tickLine={false}
           width={40}
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: NAVY_800,
-            border: `1px solid ${NAVY_300}`,
+            backgroundColor: NAVY_VOID,
+            border: `1px solid ${GREY_DARK}`,
             borderRadius: '7px',
             fontSize: '12px',
-            color: '#FBFCFC',
+            color: '#fbfcfc', // navy.air — foreground.primary (dark)
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.30)'
           }}
         />
         <Area
           type="monotone"
           dataKey="total"
-          stroke={BLUE_400}
+          stroke={BLUE_NEUTRAL}
           strokeWidth={2}
           fill="url(#totalGrad)"
           name="Total Sent"
@@ -84,7 +84,7 @@ export default function Sparkline({ data }: SparklineProps) {
         <Area
           type="monotone"
           dataKey="delivered"
-          stroke={GREEN_300}
+          stroke={GREEN_MEDIUM}
           strokeWidth={2}
           fill="url(#deliveredGrad)"
           name="Delivered"

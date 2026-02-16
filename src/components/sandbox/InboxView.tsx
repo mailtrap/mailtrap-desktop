@@ -300,32 +300,32 @@ export default function InboxView() {
   return (
     <div className="flex h-full">
       {/* ── Left: Message List ── */}
-      <div className="flex w-[280px] shrink-0 flex-col border-r border-navy-300 bg-navy-700">
+      <div className="flex w-[280px] shrink-0 flex-col border-r border-grey-dark bg-navy-700">
         {/* Inbox header */}
-        <div className="flex items-center gap-2 border-b border-navy-300 px-3 py-2.5">
+        <div className="flex items-center gap-2 border-b border-grey-dark px-3 py-2.5">
           <Link
             to="/sandbox"
-            className="rounded p-1 text-navy-100 transition-colors hover:bg-navy-500 hover:text-[#FBFCFC]"
+            className="rounded p-1 text-grey-muted transition-colors hover:bg-grey-bold hover:text-navy-air"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </Link>
-          <span className="truncate text-item-label font-semibold text-[#FBFCFC]">
+          <span className="truncate text-item-label font-semibold text-navy-air">
             {inboxMeta?.name || 'Inbox'}
           </span>
-          <span className="ml-auto text-body-s text-navy-200">
+          <span className="ml-auto text-body-s text-grey-deep">
             {messages.length}
           </span>
         </div>
 
         {/* Search bar (visual only) */}
-        <div className="border-b border-navy-300 px-3 py-2">
-          <div className="flex items-center gap-2 rounded-md bg-navy-600 px-2.5 py-1.5">
-            <svg className="h-3.5 w-3.5 text-navy-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="border-b border-grey-dark px-3 py-2">
+          <div className="flex items-center gap-2 rounded-md bg-grey-solid px-2.5 py-1.5">
+            <svg className="h-3.5 w-3.5 text-grey-deep" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
-            <span className="text-body-s text-navy-200">Search...</span>
+            <span className="text-body-s text-grey-deep">Search...</span>
           </div>
         </div>
 
@@ -333,10 +333,10 @@ export default function InboxView() {
         <div className="flex-1 overflow-auto">
           {listLoading && messages.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-neutral border-t-transparent" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="px-3 py-8 text-center text-body-s text-navy-200">
+            <div className="px-3 py-8 text-center text-body-s text-grey-deep">
               No messages yet
             </div>
           ) : (
@@ -345,27 +345,27 @@ export default function InboxView() {
                 <button
                   key={msg.id}
                   onClick={() => setSelectedId(msg.id)}
-                  className={`w-full border-b border-navy-300/30 px-3 py-2.5 text-left transition-colors ${
+                  className={`w-full border-b border-grey-dark/30 px-3 py-2.5 text-left transition-colors ${
                     selectedId === msg.id
                       ? 'bg-blue-400/15'
-                      : 'hover:bg-navy-600'
+                      : 'hover:bg-grey-solid'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span
                       className={`truncate leading-tight ${
                         !msg.isRead
-                          ? 'text-email-default text-[#FBFCFC]'
-                          : 'text-email-read text-[#FBFCFC]'
+                          ? 'text-email-default text-navy-air'
+                          : 'text-email-read text-navy-air'
                       }`}
                     >
                       {msg.subject || '(no subject)'}
                     </span>
-                    <span className="shrink-0 text-[11px] leading-tight text-navy-200">
+                    <span className="shrink-0 text-[11px] leading-tight text-grey-deep">
                       {timeAgo(msg.sentAt)}
                     </span>
                   </div>
-                  <div className="mt-0.5 truncate text-[11px] text-navy-200">
+                  <div className="mt-0.5 truncate text-[11px] text-grey-deep">
                     to: &lt;{msg.toEmail}&gt;
                   </div>
                 </button>
@@ -373,7 +373,7 @@ export default function InboxView() {
               {hasMore && (
                 <button
                   onClick={loadMore}
-                  className="w-full py-2.5 text-center text-body-s text-blue-400 hover:text-blue-300"
+                  className="w-full py-2.5 text-center text-body-s text-blue-neutral hover:text-blue-medium"
                 >
                   Load more
                 </button>
@@ -386,37 +386,37 @@ export default function InboxView() {
       {/* ── Right: Email Viewer ── */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {!selectedId || (!message && !msgLoading) ? (
-          <div className="flex flex-1 items-center justify-center text-body text-navy-200">
+          <div className="flex flex-1 items-center justify-center text-body text-grey-deep">
             Select a message to view
           </div>
         ) : msgLoading && !message ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-neutral border-t-transparent" />
           </div>
         ) : message ? (
           <>
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 border-b border-navy-300 px-5 py-2 text-body-s">
-              <Link to="/sandbox" className="text-navy-200 hover:text-blue-400">
+            <div className="flex items-center gap-1.5 border-b border-grey-dark px-5 py-2 text-body-s">
+              <Link to="/sandbox" className="text-grey-deep hover:text-blue-neutral">
                 Sandboxes
               </Link>
               <span className="text-navy-300">&gt;</span>
-              <span className="truncate text-[#FBFCFC]">
+              <span className="truncate text-navy-air">
                 {inboxMeta?.name || 'Inbox'}
               </span>
               <span className="text-navy-300">&gt;</span>
-              <span className="truncate text-[#FBFCFC]">
+              <span className="truncate text-navy-air">
                 {message.subject || '(no subject)'}
               </span>
             </div>
 
             {/* Subject + Meta */}
-            <div className="border-b border-navy-300 px-5 py-3">
+            <div className="border-b border-grey-dark px-5 py-3">
               <div className="flex items-start justify-between">
-                <h1 className="text-heading-2 text-[#FBFCFC]">
+                <h1 className="text-heading-2 text-navy-air">
                   {message.subject || '(no subject)'}
                 </h1>
-                <div className="shrink-0 text-right text-body-s text-navy-200">
+                <div className="shrink-0 text-right text-body-s text-grey-deep">
                   {new Date(message.sent_at || message.created_at).toLocaleString([], {
                     year: 'numeric',
                     month: '2-digit',
@@ -431,16 +431,16 @@ export default function InboxView() {
               {/* From / To */}
               <div className="mt-2 space-y-0.5 text-body-s">
                 <div>
-                  <span className="text-navy-200">From: </span>
-                  <span className="text-[#FBFCFC]">
+                  <span className="text-grey-deep">From: </span>
+                  <span className="text-navy-air">
                     {message.from_name
                       ? `${message.from_name} <${message.from_email}>`
                       : message.from_email}
                   </span>
                 </div>
                 <div>
-                  <span className="text-navy-200">To: </span>
-                  <span className="text-[#FBFCFC]">
+                  <span className="text-grey-deep">To: </span>
+                  <span className="text-navy-air">
                     {message.to_name
                       ? `${message.to_name} <${message.to_email}>`
                       : message.to_email}
@@ -451,14 +451,14 @@ export default function InboxView() {
               {/* Show Headers toggle */}
               <button
                 onClick={() => setShowHeaders(!showHeaders)}
-                className="mt-1.5 text-body-s text-blue-400 hover:text-blue-300"
+                className="mt-1.5 text-body-s text-blue-neutral hover:text-blue-medium"
               >
                 {showHeaders ? 'Hide Headers' : 'Show Headers'}
               </button>
 
               {/* Expanded headers */}
               {showHeaders && (
-                <div className="mt-2 space-y-1 rounded-md bg-navy-600 p-3 text-body-s">
+                <div className="mt-2 space-y-1 rounded-md bg-grey-solid p-3 text-body-s">
                   <HeaderLine label="Subject" value={message.subject} />
                   <HeaderLine
                     label="From"
@@ -484,7 +484,7 @@ export default function InboxView() {
             </div>
 
             {/* Tab bar */}
-            <div className="flex items-center border-b border-navy-300 px-5">
+            <div className="flex items-center border-b border-grey-dark px-5">
               <div className="flex gap-0">
                 {tabs.map((tab) => (
                   <button
@@ -492,8 +492,8 @@ export default function InboxView() {
                     onClick={() => handleTabClick(tab.key)}
                     className={`border-b-2 px-3.5 py-2 text-tab transition-colors ${
                       activeTab === tab.key
-                        ? 'border-blue-400 text-[#FBFCFC]'
-                        : 'border-transparent text-navy-100 hover:text-[#FBFCFC]'
+                        ? 'border-blue-neutral text-navy-air'
+                        : 'border-transparent text-grey-muted hover:text-navy-air'
                     }`}
                   >
                     {tab.label}
@@ -541,7 +541,7 @@ export default function InboxView() {
                 href={`https://mailtrap.io/inboxes/${inboxId}/messages/${message.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-3 flex items-center gap-1 text-body-s text-navy-100 transition-colors hover:text-blue-400"
+                className="ml-3 flex items-center gap-1 text-body-s text-grey-muted transition-colors hover:text-blue-neutral"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -553,7 +553,7 @@ export default function InboxView() {
             <div className="flex-1 overflow-auto">
               {tabLoading && activeTab !== 'html' ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-neutral border-t-transparent" />
                 </div>
               ) : (
                 <>
@@ -576,7 +576,7 @@ export default function InboxView() {
                         <div className="flex h-full items-start justify-center overflow-auto py-6">
                           <div className="flex flex-col items-center">
                             <div
-                              className="overflow-hidden rounded-[2rem] border-[3px] border-blue-400/60"
+                              className="overflow-hidden rounded-[2rem] border-[3px] border-blue-neutral/60"
                               style={{ width: '768px', height: '1024px', maxHeight: 'calc(100vh - 300px)' }}
                             >
                               <iframe
@@ -594,7 +594,7 @@ export default function InboxView() {
                         <div className="flex h-full items-start justify-center overflow-auto py-6">
                           <div className="flex flex-col items-center">
                             <div
-                              className="flex flex-col overflow-hidden rounded-[2.5rem] border-[3px] border-blue-400/60"
+                              className="flex flex-col overflow-hidden rounded-[2.5rem] border-[3px] border-blue-neutral/60"
                               style={{ width: '375px' }}
                             >
                               {/* Screen */}
@@ -608,8 +608,8 @@ export default function InboxView() {
                                 />
                               </div>
                               {/* Home button area */}
-                              <div className="flex items-center justify-center bg-navy-800 py-3">
-                                <div className="h-8 w-8 rounded-full border-[2.5px] border-navy-300" />
+                              <div className="flex items-center justify-center bg-navy-void py-3">
+                                <div className="h-8 w-8 rounded-full border-[2.5px] border-grey-dark" />
                               </div>
                             </div>
                           </div>
@@ -617,7 +617,7 @@ export default function InboxView() {
                       )
                     ) : (
                       <div className="flex h-full items-center justify-center">
-                        <p className="text-body text-navy-100">
+                        <p className="text-body text-grey-muted">
                           No HTML content available
                         </p>
                       </div>
@@ -631,7 +631,7 @@ export default function InboxView() {
 
                   {/* Text */}
                   {activeTab === 'text' && (
-                    <pre className="whitespace-pre-wrap p-5 text-body text-[#FBFCFC]">
+                    <pre className="whitespace-pre-wrap p-5 text-body text-navy-air">
                       {tabContent || 'No text content'}
                     </pre>
                   )}
@@ -679,7 +679,7 @@ function SyntaxHighlightedCode({
 
   if (!code) {
     return (
-      <pre className="p-5 font-mono text-body-s text-navy-200">{fallback}</pre>
+      <pre className="p-5 font-mono text-body-s text-grey-deep">{fallback}</pre>
     )
   }
 
@@ -702,8 +702,8 @@ function SyntaxHighlightedCode({
 function HeaderLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-3">
-      <span className="w-20 shrink-0 text-navy-200">{label}</span>
-      <span className="text-[#FBFCFC]">{value}</span>
+      <span className="w-20 shrink-0 text-grey-deep">{label}</span>
+      <span className="text-navy-air">{value}</span>
     </div>
   )
 }
@@ -725,8 +725,8 @@ function DeviceButton({
       title={title}
       className={`rounded p-1.5 transition-colors ${
         active
-          ? 'bg-navy-500 text-[#FBFCFC]'
-          : 'text-navy-200 hover:text-[#FBFCFC]'
+          ? 'bg-grey-bold text-navy-air'
+          : 'text-grey-deep hover:text-navy-air'
       }`}
     >
       {children}
@@ -766,7 +766,7 @@ function CopyButton({ value }: { value: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="shrink-0 rounded border border-blue-400/60 px-2.5 py-1 text-[12px] font-normal text-blue-400 transition-colors hover:border-blue-300 hover:text-blue-300"
+      className="shrink-0 rounded border border-blue-neutral/60 px-2.5 py-1 text-[12px] font-normal text-blue-neutral transition-colors hover:border-blue-medium hover:text-blue-medium"
     >
       {copied ? 'Copied' : 'Copy'}
     </button>
@@ -775,7 +775,7 @@ function CopyButton({ value }: { value: string }) {
 
 function InfoIcon() {
   return (
-    <svg className="h-4 w-4 text-navy-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <svg className="h-4 w-4 text-grey-deep" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
     </svg>
   )
@@ -813,35 +813,35 @@ function TechInfoView({
   const hasBcc = emailHeaders.some(h => h.name.toLowerCase() === 'bcc')
 
   return (
-    <div className="space-y-6">
-      {/* SMTP Transaction Info */}
-      <div className="rounded-mtui-table border border-navy-300 bg-navy-600 px-5 pb-5 pt-4">
+    <div className="flex flex-col gap-8">
+      {/* SMTP Transaction Info — MTUI: Panel dimmed + HeadingBar + GridTable small */}
+      <div className="rounded-mtui border border-grey-shade bg-grey-bold px-5 pb-5 pt-4">
         <div className="flex items-center gap-1.5">
-          <h3 className="text-item-label font-semibold text-[#FBFCFC]">
+          <h2 className="text-heading-2 text-navy-air">
             SMTP Transaction Info
-          </h3>
+          </h2>
           <InfoIcon />
         </div>
-        <p className="mt-3 text-body-s text-navy-200">
+        <p className="mb-5 mt-3 text-body-s text-grey-muted">
           This information is sent with an SMTP transaction itself and is not included in the email headers or body.
           It can be crucial for SMTP debugging, but can&apos;t be found in common email tools.
         </p>
         {smtpRows.length > 0 ? (
-          <div className="mt-5 overflow-hidden rounded-mtui-table border border-navy-300/40">
-            <table className="w-full">
+          <div className="overflow-hidden rounded-mtui border border-grey-dark/40">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-navy-300/30">
-                  <th className="w-[140px] px-5 py-2.5 text-left text-body-s font-medium text-navy-100">Name</th>
-                  <th className="px-5 py-2.5 text-left text-body-s font-medium text-navy-100">Value</th>
-                  <th className="w-16 py-2.5"></th>
+                <tr className="border-b border-grey-dark/30 bg-grey-void">
+                  <th className="w-[20%] px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Name</th>
+                  <th className="px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Value</th>
+                  <th className="w-16 py-[5px]"></th>
                 </tr>
               </thead>
               <tbody>
                 {smtpRows.map((row) => (
-                  <tr key={row.name} className="border-b border-navy-300/15 last:border-0">
-                    <td className="px-5 py-3 text-body text-[#FBFCFC]">{row.name}</td>
-                    <td className="px-5 py-3 text-body text-[#FBFCFC]">{row.value}</td>
-                    <td className="py-3 pr-5 text-right">
+                  <tr key={row.name} className="border-b border-grey-dark/15 last:border-0">
+                    <td className="px-[10px] py-[5px] text-sm text-navy-air" style={{ minHeight: 38 }}>{row.name}</td>
+                    <td className="px-[10px] py-[5px] text-sm text-navy-air" style={{ minHeight: 38 }}>{row.value}</td>
+                    <td className="py-[5px] pr-[10px] text-right">
                       <CopyButton value={row.value} />
                     </td>
                   </tr>
@@ -850,19 +850,19 @@ function TechInfoView({
             </table>
           </div>
         ) : (
-          <p className="mt-3 text-body-s text-navy-200">No SMTP transaction data available.</p>
+          <p className="text-body-s text-grey-muted">No SMTP transaction data available.</p>
         )}
       </div>
 
-      {/* Email Headers */}
-      <div className="rounded-mtui-table border border-navy-300 bg-navy-600 px-5 pb-5 pt-4">
+      {/* Email Headers — MTUI: Panel dimmed + HeadingBar + GridTable small reverseZebra */}
+      <div className="rounded-mtui border border-grey-shade bg-grey-bold px-5 pb-5 pt-4">
         <div className="flex items-center gap-1.5">
-          <h3 className="text-item-label font-semibold text-[#FBFCFC]">
+          <h2 className="text-heading-2 text-navy-air">
             Email Headers
-          </h3>
+          </h2>
           <InfoIcon />
         </div>
-        <p className="mt-3 text-body-s text-navy-200">
+        <p className="mb-5 mt-2 text-body-s text-grey-muted">
           Original values of the headers. When sending a real email, headers can be altered by an email service provider or a mail transfer agent.
         </p>
         {headersToShow.length > 0 || extraHeaders.length > 0 ? (
@@ -872,7 +872,7 @@ function TechInfoView({
             hasBcc={hasBcc}
           />
         ) : (
-          <p className="mt-3 text-body-s text-navy-200">Loading headers...</p>
+          <p className="text-body-s text-grey-muted">Loading headers...</p>
         )}
       </div>
     </div>
@@ -901,23 +901,23 @@ function EmailHeadersTable({
   }
 
   return (
-    <div className="mt-5 overflow-hidden rounded-mtui-table border border-navy-300/40">
-      <table className="w-full">
+    <div className="overflow-hidden rounded-mtui border border-grey-dark/40">
+      <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b border-navy-300/30">
-            <th className="w-[140px] px-5 py-2.5 text-left text-body-s font-medium text-navy-100">Name</th>
-            <th className="px-5 py-2.5 text-left text-body-s font-medium text-navy-100">Value</th>
-            <th className="w-16 py-2.5"></th>
+          <tr className="border-b border-grey-dark/30 bg-grey-void">
+            <th className="w-[20%] px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Name</th>
+            <th className="px-[10px] py-[5px] text-left text-sm font-semibold text-navy-air" style={{ minHeight: 38 }}>Value</th>
+            <th className="w-16 py-[5px]"></th>
           </tr>
         </thead>
         <tbody>
           {allRows.map((row, i) => {
             if (row.type === 'bcc-notice') {
               return (
-                <tr key="bcc-notice" className="border-b border-navy-300/15">
-                  <td colSpan={3} className="py-3 text-center">
-                    <span className="inline-flex items-center gap-1.5 text-body-s text-navy-200">
-                      <svg className="h-3.5 w-3.5 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <tr key="bcc-notice" className={`border-b border-grey-dark/15 ${i % 2 !== 0 ? 'bg-grey-bold' : ''}`}>
+                  <td colSpan={3} className="py-[5px] text-center" style={{ minHeight: 38 }}>
+                    <span className="inline-flex items-center gap-1.5 text-sm text-grey-muted">
+                      <svg className="h-4 w-4 text-green-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                       </svg>
                       There is no Bcc information in this email message
@@ -929,13 +929,13 @@ function EmailHeadersTable({
             return (
               <tr
                 key={row.name + i}
-                className={`border-b border-navy-300/15 last:border-0 ${i % 2 === 0 ? 'bg-navy-500' : ''}`}
+                className={`border-b border-grey-dark/15 last:border-0 ${i % 2 !== 0 ? 'bg-grey-bold' : ''}`}
               >
-                <td className="px-5 py-3 text-body text-[#FBFCFC]">{row.name}</td>
-                <td className="max-w-0 truncate px-5 py-3 text-body text-[#FBFCFC]" title={row.value}>
+                <td className="px-[10px] py-[5px] text-sm text-navy-air" style={{ minHeight: 38 }}>{row.name}</td>
+                <td className="max-w-0 truncate px-[10px] py-[5px] text-sm text-navy-air" title={row.value} style={{ minHeight: 38 }}>
                   {row.value}
                 </td>
-                <td className="py-3 pr-5 text-right">
+                <td className="py-[5px] pr-[10px] text-right">
                   <CopyButton value={row.value} />
                 </td>
               </tr>

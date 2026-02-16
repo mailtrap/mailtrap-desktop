@@ -57,17 +57,17 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col bg-navy-800">
+      <div className="flex h-full flex-col bg-navy-void">
         <TitleBar />
         <div className="flex flex-1 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-neutral border-t-transparent" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex h-full flex-col bg-navy-800">
+    <div className="flex h-full flex-col bg-navy-void">
       <TitleBar />
       <div className="flex-1 overflow-hidden">
         {isAuthenticated ? (

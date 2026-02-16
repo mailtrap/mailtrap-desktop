@@ -20,19 +20,19 @@ export default function StatsCard({
 
   return (
     <div
-      className={`rounded-mtui border p-4 transition-colors ${
+      className={`rounded-mtui border p-4 transition-colors duration-mtui ease-mtui ${
         isAboveThreshold
-          ? 'border-red-300/50 bg-red-300/5'
-          : 'border-navy-300 bg-navy-600'
+          ? 'border-red-shade bg-red-solid'
+          : 'border-grey-shade bg-grey-bold'
       }`}
     >
       <div className="mb-1 flex items-center gap-1.5">
-        <span className="text-body-s text-navy-100">{label}</span>
+        <span className="text-body-s text-grey-muted">{label}</span>
       </div>
       <div className="flex items-baseline gap-2">
         <span
           className={`text-card-number ${
-            isAboveThreshold ? 'text-red-300' : 'text-[#FBFCFC]'
+            isAboveThreshold ? 'text-red-medium' : 'text-navy-air'
           }`}
         >
           {count.toLocaleString()}
@@ -41,7 +41,7 @@ export default function StatsCard({
       <div className="mt-0.5">
         <span
           className={`text-body-s ${
-            isAboveThreshold ? 'text-red-300' : 'text-navy-100'
+            isAboveThreshold ? 'text-red-medium' : 'text-grey-muted'
           }`}
         >
           {ratePercent}%

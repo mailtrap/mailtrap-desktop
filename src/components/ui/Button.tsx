@@ -1,14 +1,15 @@
 import React from 'react'
 
 /* ───────────────────────────────────────────────────────────────────────── *
- *  MTUI Button — Figma-faithful implementation
+ *  MTUI Button — sourced from mtui/components/Button/index.js
  *
- *  Figma source:  MTUI Library → Button → base-button
- *  Variants:      primary | outlined | ghost | danger | danger-outlined
- *                 success | success-outlined | dark | dark-outline
- *  Sizes:         sm (27 px) | md (35 px — default) | lg (43 px)
- *  Radius:        7 px  (rounded-mtui)
- *  Font:          14/600 Inter  -0.28 ls  (text-button-label)
+ *  Variants:  primary | outlined | ghost | danger | danger-outlined
+ *             success | success-outlined | dark | dark-outline
+ *  Sizes:     sm (4px 8px) | md (8px 16px, default) | big (12px 20px)
+ *  Radius:    7px  (borderRadius.base)
+ *  Font:      14px / 600  line-height 1.15
+ *
+ *  All colors below are dark-theme values from semanticColors/dark.js
  * ───────────────────────────────────────────────────────────────────────── */
 
 export type ButtonVariant =
@@ -32,101 +33,89 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   iconPosition?: 'left' | 'right'
 }
 
-/* ── size → padding / height ─────────────────────────────────────────── */
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'px-2 py-1 text-button-label min-h-[27px]',
-  md: 'px-4 py-2 text-button-label min-h-[35px]',
-  lg: 'px-5 py-3 text-button-label min-h-[43px]'
+  sm: 'btn-sm',
+  md: '',
+  lg: 'btn-lg'
 }
 
-/* ── variant → colors  (dark-mode-adapted from Figma light tokens) ─── */
 const variantClasses: Record<ButtonVariant, string> = {
-  // Figma: bg=#4C83EE  hover=#5D93FC  disabled=#EEEEEE/#A3ABB4
   primary: [
-    'bg-blue-400 text-white border border-blue-400',
-    'hover:bg-blue-300 hover:border-blue-300',
-    'active:bg-blue-500 active:border-blue-500',
-    'focus-visible:ring-2 focus-visible:ring-blue-400/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-blue-neutral text-navy-air border border-blue-neutral',
+    'hover:bg-blue-medium hover:border-blue-medium',
+    'active:bg-blue-dark active:border-blue-dark',
+    'focus-visible:ring-2 focus-visible:ring-blue-neutral/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: transparent/stroke=#4C83EE  hover=bg#5D93FC/white  disabled=#EEEEEE/#A3ABB4
   outlined: [
-    'bg-transparent text-blue-400 border border-blue-400',
-    'hover:bg-blue-300 hover:text-white hover:border-blue-300',
-    'active:bg-blue-500 active:text-white active:border-blue-500',
-    'focus-visible:ring-2 focus-visible:ring-blue-400/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-transparent text-blue-neutral border border-blue-neutral',
+    'hover:bg-blue-medium hover:text-navy-air hover:border-blue-medium',
+    'active:bg-blue-dark active:text-navy-air active:border-blue-dark',
+    'focus-visible:ring-2 focus-visible:ring-blue-neutral/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: transparent/no-stroke  text=#4C83EE  hover=text#5D93FC  disabled=#EEEEEE/#A3ABB4
   ghost: [
-    'bg-transparent text-blue-400 border border-transparent',
-    'hover:text-blue-300 hover:bg-navy-500',
-    'active:text-blue-500 active:bg-navy-400',
-    'focus-visible:ring-2 focus-visible:ring-blue-400/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-transparent text-blue-neutral border border-transparent',
+    'hover:text-blue-medium hover:bg-grey-bold',
+    'active:text-blue-medium active:bg-grey-shade',
+    'focus-visible:ring-2 focus-visible:ring-blue-neutral/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: bg=#FB5151  hover=#FF7171  disabled=#EEEEEE/#A3ABB4
   danger: [
-    'bg-red-300 text-white border border-red-300',
-    'hover:bg-red-200 hover:border-red-200',
-    'active:bg-red-400 active:border-red-400',
-    'focus-visible:ring-2 focus-visible:ring-red-300/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-transparent text-red-medium border border-red-medium',
+    'hover:bg-red-soft hover:border-red-soft hover:text-navy-air',
+    'active:bg-red-neutral active:border-red-neutral active:text-navy-air',
+    'focus-visible:ring-2 focus-visible:ring-red-medium/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: transparent/stroke=#FB5151  hover=bg#FF7171/white  disabled=#EEEEEE/#A3ABB4
   'danger-outlined': [
-    'bg-transparent text-red-300 border border-red-300',
-    'hover:bg-red-200 hover:text-white hover:border-red-200',
-    'active:bg-red-400 active:text-white active:border-red-400',
-    'focus-visible:ring-2 focus-visible:ring-red-300/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-transparent text-red-medium border border-red-medium',
+    'hover:bg-red-soft hover:text-navy-air hover:border-red-soft',
+    'active:bg-red-neutral active:text-navy-air active:border-red-neutral',
+    'focus-visible:ring-2 focus-visible:ring-red-medium/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: bg=#22D172  hover=#45E890  disabled=#EEEEEE/#A3ABB4
   success: [
-    'bg-green-300 text-white border border-green-300',
-    'hover:bg-green-200 hover:border-green-200',
-    'active:bg-green-400 active:border-green-400',
-    'focus-visible:ring-2 focus-visible:ring-green-300/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-green-medium text-navy-air border border-green-medium',
+    'hover:bg-green-soft hover:border-green-soft',
+    'active:bg-green-neutral active:border-green-neutral',
+    'focus-visible:ring-2 focus-visible:ring-green-medium/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: transparent/stroke=#22D172  hover=bg#45E890/white  disabled=#EEEEEE/#A3ABB4
   'success-outlined': [
-    'bg-transparent text-green-300 border border-green-300',
-    'hover:bg-green-200 hover:text-white hover:border-green-200',
-    'active:bg-green-400 active:text-white active:border-green-400',
-    'focus-visible:ring-2 focus-visible:ring-green-300/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-transparent text-green-medium border border-green-medium',
+    'hover:bg-green-soft hover:text-navy-air hover:border-green-soft',
+    'active:bg-green-neutral active:text-navy-air active:border-green-neutral',
+    'focus-visible:ring-2 focus-visible:ring-green-medium/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: bg=#1A2E44  hover=#38445E  disabled=#EEEEEE/#A3ABB4
   dark: [
-    'bg-[#1A2E44] text-white border border-[#1A2E44]',
-    'hover:bg-[#38445E] hover:border-[#38445E]',
-    'active:bg-navy-300 active:border-navy-300',
-    'focus-visible:ring-2 focus-visible:ring-navy-300/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-white text-grey-void border border-white',
+    'hover:bg-grey-neutral hover:border-grey-neutral',
+    'active:bg-navy-muted active:border-navy-muted',
+    'focus-visible:ring-2 focus-visible:ring-grey-neutral/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' '),
 
-  // Figma: transparent/stroke=#1A2E44  hover=bg#38445E/white  disabled=#EEEEEE/#A3ABB4
   'dark-outline': [
-    'bg-transparent text-[#FBFCFC] border border-navy-300',
-    'hover:bg-[#38445E] hover:text-white hover:border-[#38445E]',
-    'active:bg-navy-300 active:text-white active:border-navy-300',
-    'focus-visible:ring-2 focus-visible:ring-navy-300/40',
-    'disabled:bg-navy-400 disabled:border-navy-400 disabled:text-navy-100'
+    'bg-transparent text-navy-air border border-white',
+    'hover:bg-grey-neutral hover:text-grey-void hover:border-grey-neutral',
+    'active:bg-navy-muted active:text-grey-void active:border-navy-muted',
+    'focus-visible:ring-2 focus-visible:ring-grey-neutral/40',
+    'disabled:bg-grey-shade disabled:border-grey-shade disabled:text-grey-deep'
   ].join(' ')
 }
 
 const baseClasses =
-  'inline-flex items-center justify-center gap-2 rounded-mtui font-semibold transition-colors focus:outline-none disabled:cursor-not-allowed'
+  'inline-flex items-center justify-center gap-2 rounded-mtui font-semibold transition-colors duration-mtui ease-mtui focus:outline-none disabled:cursor-not-allowed disabled:pointer-events-none'
 
-/* ── spinner ─────────────────────────────────────────────────────────── */
 function Spinner({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -151,7 +140,6 @@ function Spinner({ className = '' }: { className?: string }) {
   )
 }
 
-/* ── component ───────────────────────────────────────────────────────── */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -174,6 +162,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={isDisabled}
         className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+        style={{ padding: size === 'sm' ? '4px 8px' : size === 'lg' ? '12px 20px' : '8px 16px', lineHeight: '1.15' }}
         {...rest}
       >
         {loading && <Spinner />}

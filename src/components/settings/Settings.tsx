@@ -48,14 +48,14 @@ export default function Settings() {
   if (!settings) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-400 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-neutral border-t-transparent" />
       </div>
     )
   }
 
   return (
     <div className="mx-auto max-w-lg p-6">
-      <h1 className="mb-8 text-heading-1 text-[#FBFCFC]">Settings</h1>
+      <h1 className="mb-8 text-heading-1 text-navy-air">Settings</h1>
 
       <div className="space-y-6">
         {/* Sandboxes Polling */}
@@ -126,10 +126,10 @@ export default function Settings() {
             onClick={() =>
               updateSetting('launchAtStartup', !settings.launchAtStartup)
             }
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-mtui ease-mtui ${
               settings.launchAtStartup
-                ? 'bg-blue-400'
-                : 'bg-navy-300'
+                ? 'bg-blue-neutral'
+                : 'bg-grey-dark'
             }`}
           >
             <span
@@ -140,16 +140,16 @@ export default function Settings() {
           </button>
         </SettingRow>
 
-        {/* Divider */}
-        <div className="border-t border-navy-300" />
+        {/* MTUI Separator — horizontal, border.light (dark) */}
+        <div className="h-px w-full bg-grey-shade" />
 
         {/* Logout */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-item-label text-[#FBFCFC]">
+            <p className="text-item-label text-navy-air">
               Disconnect Account
             </p>
-            <p className="text-body-s text-navy-100">
+            <p className="text-body-s text-grey-muted">
               Remove your API token and log out
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function Settings() {
 
       {/* Save indicator */}
       {saving && (
-        <p className="mt-4 text-center text-body-s text-navy-200">
+        <p className="mt-4 text-center text-body-s text-grey-deep">
           Saving...
         </p>
       )}
@@ -186,8 +186,8 @@ function SettingRow({
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-item-label text-[#FBFCFC]">{label}</p>
-        <p className="text-body-s text-navy-100">{description}</p>
+        <p className="text-item-label text-navy-air">{label}</p>
+        <p className="text-body-s text-grey-muted">{description}</p>
       </div>
       {children}
     </div>
