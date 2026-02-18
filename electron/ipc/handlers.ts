@@ -1,4 +1,5 @@
 import { ipcMain, app } from 'electron'
+import type { IpcMainInvokeEvent } from 'electron'
 import { initApiClients, destroyApiClients } from '../api/client'
 import {
   getAccounts,
@@ -23,30 +24,44 @@ import {
 } from '../api/stats'
 import {
   saveToken,
-    getToken,
-    deleteToken,
-    saveAccountId,
-    getAccountId,
-    saveAccountName,
-    getAccountName,
-    getHiddenTrayInboxIds,
-    setInboxTrayVisibility,
-    setMultipleInboxTrayVisibility,
-    saveSendingStatsCache,
-    getSendingStatsCache,
-    saveInboxSummariesCache,
-    getInboxSummariesCache,
-    saveSendingDomainsCache,
-    getSendingDomainsCache,
-    saveMessagesCache,
-    getMessagesCache,
-    saveEmailCache,
-    getEmailCache,
-    getSettings,
-    saveSettings
-  } from '../store'
+  getToken,
+  deleteToken,
+  saveAccountId,
+  getAccountId,
+  saveAccountName,
+  getAccountName,
+  getHiddenTrayInboxIds,
+  setInboxTrayVisibility,
+  setMultipleInboxTrayVisibility,
+  saveSendingStatsCache,
+  getSendingStatsCache,
+  saveInboxSummariesCache,
+  getInboxSummariesCache,
+  saveSendingDomainsCache,
+  getSendingDomainsCache,
+  saveMessagesCache,
+  getMessagesCache,
+  saveEmailCache,
+  getEmailCache,
+  getSettings,
+  saveSettings
+} from '../store'
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling } from '../polling'
 import type { AppSettings } from '../api/types'
+
+/**
+ * Wraps an IPC handler that requires authentication.
+ * Automatically resolves the accountId and throws if not authenticated.
+ */
+function withAuth<TArgs extends unknown[], TReturn>(
+  handler: (accountId: number, ...args: TArgs) => Promise<TReturn> | TReturn
+) {
+  return async (_event: IpcMainInvokeEvent, ...args: TArgs): Promise<TReturn> => {
+    const accountId = getAccountId()
+    if (!accountId) throw new Error('Not authenticated')
+    return handler(accountId, ...args)
+  }
+}
 
 export function registerIpcHandlers(): void {
   // ── Auth ──
@@ -95,56 +110,39 @@ export function registerIpcHandlers(): void {
 
   // ── Sandbox ──
 
-  ipcMain.handle('sandbox:get-projects', async () => {
-    const accountId = getAccountId()
-    if (!accountId) throw new Error('Not authenticated')
-    return await getProjects(accountId)
-  })
+  ipcMain.handle('sandbox:get-projects', withAuth(
+    (accountId) => getProjects(accountId)
+  ))
 
-  ipcMain.handle('sandbox:get-inboxes', async () => {
-    const accountId = getAccountId()
-    if (!accountId) throw new Error('Not authenticated')
-    return await getInboxes(accountId)
-  })
+  ipcMain.handle('sandbox:get-inboxes', withAuth(
+    (accountId) => getInboxes(accountId)
+  ))
 
-  ipcMain.handle('sandbox:get-inbox-summaries', async () => {
-    const accountId = getAccountId()
-    if (!accountId) throw new Error('Not authenticated')
-    return await getInboxSummaries(accountId)
-  })
+  ipcMain.handle('sandbox:get-inbox-summaries', withAuth(
+    (accountId) => getInboxSummaries(accountId)
+  ))
 
-  ipcMain.handle(
-    'sandbox:get-messages',
-    async (_event, inboxId: number, page: number) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
+  ipcMain.handle('sandbox:get-messages', withAuth(
+    async (accountId, inboxId: number, page: number) => {
       const messages = await getMessages(accountId, inboxId, page)
       return messages.map(toMessageSummary)
     }
-  )
+  ))
 
-  ipcMain.handle(
-    'sandbox:get-message',
-    async (_event, inboxId: number, messageId: number) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
-      return await getMessage(accountId, inboxId, messageId)
-    }
-  )
+  ipcMain.handle('sandbox:get-message', withAuth(
+    (accountId, inboxId: number, messageId: number) =>
+      getMessage(accountId, inboxId, messageId)
+  ))
 
-  ipcMain.handle(
-    'sandbox:get-message-html',
-    async (_event, inboxId: number, messageId: number) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
+  ipcMain.handle('sandbox:get-message-html', withAuth(
+    async (accountId, inboxId: number, messageId: number) => {
       try {
         return await getMessageHtmlBody(accountId, inboxId, messageId)
       } catch {
-        // HTML body may not exist for some messages — return empty
         return ''
       }
     }
-  )
+  ))
 
   ipcMain.handle(
     'sandbox:get-message-content',
@@ -157,73 +155,45 @@ export function registerIpcHandlers(): void {
     }
   )
 
-  ipcMain.handle(
-    'sandbox:get-spam-report',
-    async (_event, inboxId: number, messageId: number) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
-      return await getMessageSpamReport(accountId, inboxId, messageId)
-    }
-  )
+  ipcMain.handle('sandbox:get-spam-report', withAuth(
+    (accountId, inboxId: number, messageId: number) =>
+      getMessageSpamReport(accountId, inboxId, messageId)
+  ))
 
-  ipcMain.handle(
-    'sandbox:get-html-analysis',
-    async (_event, inboxId: number, messageId: number) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
-      return await getMessageHtmlAnalysis(accountId, inboxId, messageId)
-    }
-  )
+  ipcMain.handle('sandbox:get-html-analysis', withAuth(
+    (accountId, inboxId: number, messageId: number) =>
+      getMessageHtmlAnalysis(accountId, inboxId, messageId)
+  ))
 
   // ── Sending Stats ──
 
-  ipcMain.handle('sending:get-domains', async () => {
-    const accountId = getAccountId()
-    if (!accountId) throw new Error('Not authenticated')
-    return await getSendingDomains(accountId)
-  })
+  ipcMain.handle('sending:get-domains', withAuth(
+    (accountId) => getSendingDomains(accountId)
+  ))
 
-  ipcMain.handle(
-    'sending:get-stats',
-    async (_event, startDate: string, endDate: string, domainIds?: number[]) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
-      return await getAggregatedStats(accountId, startDate, endDate, domainIds)
-    }
-  )
+  ipcMain.handle('sending:get-stats', withAuth(
+    (accountId, startDate: string, endDate: string, domainIds?: number[]) =>
+      getAggregatedStats(accountId, startDate, endDate, domainIds)
+  ))
 
-  ipcMain.handle(
-    'sending:get-daily-stats',
-    async (_event, startDate: string, endDate: string, domainIds?: number[]) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
-      return await getDailyStats(accountId, startDate, endDate, domainIds)
-    }
-  )
+  ipcMain.handle('sending:get-daily-stats', withAuth(
+    (accountId, startDate: string, endDate: string, domainIds?: number[]) =>
+      getDailyStats(accountId, startDate, endDate, domainIds)
+  ))
 
-  ipcMain.handle(
-    'sending:get-provider-stats',
-    async (_event, startDate: string, endDate: string, domainIds?: number[]) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
-      return await getMailboxProviderStats(accountId, startDate, endDate, domainIds)
-    }
-  )
+  ipcMain.handle('sending:get-provider-stats', withAuth(
+    (accountId, startDate: string, endDate: string, domainIds?: number[]) =>
+      getMailboxProviderStats(accountId, startDate, endDate, domainIds)
+  ))
 
-  ipcMain.handle(
-    'sending:get-category-stats',
-    async (_event, startDate: string, endDate: string, domainIds?: number[]) => {
-      const accountId = getAccountId()
-      if (!accountId) throw new Error('Not authenticated')
-      return await getCategoryStats(accountId, startDate, endDate, domainIds)
-    }
-  )
+  ipcMain.handle('sending:get-category-stats', withAuth(
+    (accountId, startDate: string, endDate: string, domainIds?: number[]) =>
+      getCategoryStats(accountId, startDate, endDate, domainIds)
+  ))
 
-  ipcMain.handle('sending:get-stream-summaries', async () => {
-    const accountId = getAccountId()
-    if (!accountId) throw new Error('Not authenticated')
-    return await getStreamSummaries(accountId)
-  })
+  ipcMain.handle('sending:get-stream-summaries', withAuth(
+    (accountId) => getStreamSummaries(accountId)
+  ))
 
   // ── Tray Visibility ──
 
@@ -316,14 +286,12 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('settings:save', (_event, settings: Partial<AppSettings>) => {
     const updated = saveSettings(settings)
-    // Restart the correct polling timer when its interval changes
     if (settings.testingPollingIntervalMs !== undefined) {
       restartTestingPolling()
     }
     if (settings.sendingPollingIntervalMs !== undefined) {
       restartSendingPolling()
     }
-    // Apply launch-at-startup setting
     if (settings.launchAtStartup !== undefined) {
       app.setLoginItemSettings({ openAtLogin: settings.launchAtStartup })
     }

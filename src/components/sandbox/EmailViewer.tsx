@@ -1,47 +1,29 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-
-interface FullMessage {
-  id: number
-  inbox_id: number
-  subject: string
-  from_email: string
-  from_name: string
-  to_email: string
-  to_name: string
-  sent_at: string
-  created_at: string
-  html_body: string
-  text_body: string
-  is_read: boolean
-  human_size: string
-}
+import type { Message } from '../../../electron/api/types'
 
 type Tab = 'html' | 'text' | 'headers'
 
 export default function EmailViewer() {
   const { inboxId, messageId } = useParams<{ inboxId: string; messageId: string }>()
-  const [message, setMessage] = useState<FullMessage | null>(null)
+  const [message, setMessage] = useState<Message | null>(null)
   const [htmlBody, setHtmlBody] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('html')
-  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     if (inboxId && messageId) loadCacheThenFetch()
   }, [inboxId, messageId])
 
-  /** Load cached email first, then fetch fresh */
   const loadCacheThenFetch = async () => {
     if (!inboxId || !messageId) return
 
-    // Step 1: Load cache instantly
     try {
       const cached = await window.electron.getEmailCache(Number(inboxId), Number(messageId))
-      if (cached && cached.data) {
-        const { message: msg, htmlBody: html } = cached.data as { message: FullMessage; htmlBody: string | null }
+      if (cached?.data) {
+        const { message: msg, htmlBody: html } = cached.data
         if (msg) {
           setMessage(msg)
           setHtmlBody(html)
@@ -52,7 +34,6 @@ export default function EmailViewer() {
       // no cache
     }
 
-    // Step 2: Fetch fresh
     await fetchFreshMessage()
   }
 
@@ -67,19 +48,17 @@ export default function EmailViewer() {
 
     try {
       const msg = await window.electron.getMessage(Number(inboxId), Number(messageId))
-      setMessage(msg as unknown as FullMessage)
+      setMessage(msg)
       setError(null)
 
-      // Fetch HTML separately — non-fatal if it fails
       let html: string | null = null
       try {
         html = await window.electron.getMessageHtml(Number(inboxId), Number(messageId))
       } catch {
-        // Some messages have no HTML body — that's OK
+        // Some messages have no HTML body
       }
       setHtmlBody(html)
 
-      // Save to cache
       window.electron.saveEmailCache(Number(inboxId), Number(messageId), msg, html)
     } catch (err) {
       if (!message) {
@@ -90,17 +69,6 @@ export default function EmailViewer() {
       setRefreshing(false)
     }
   }
-
-  useEffect(() => {
-    if (activeTab === 'html' && htmlBody && iframeRef.current) {
-      const doc = iframeRef.current.contentDocument
-      if (doc) {
-        doc.open()
-        doc.write(htmlBody)
-        doc.close()
-      }
-    }
-  }, [activeTab, htmlBody])
 
   if (loading && !message) {
     return (
@@ -137,6 +105,7 @@ export default function EmailViewer() {
           <Link
             to={`/sandbox/inbox/${inboxId}`}
             className="rounded-mtui p-1.5 text-grey-muted transition-colors hover:bg-grey-bold hover:text-navy-air"
+            aria-label="Back to inbox"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -201,8 +170,8 @@ export default function EmailViewer() {
         {activeTab === 'html' && (
           htmlBody ? (
             <iframe
-              ref={iframeRef}
               title="Email HTML Preview"
+              srcDoc={htmlBody}
               className="h-full w-full border-0 bg-white"
               sandbox="allow-same-origin"
             />

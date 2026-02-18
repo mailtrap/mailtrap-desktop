@@ -89,6 +89,8 @@ export interface Message {
   txt_path: string
   raw_path: string
   download_path: string
+  html_body: string
+  text_body: string
   html_source_path: string
   blacklists_report_info: boolean | Record<string, unknown>
   smtp_information?: {
@@ -229,6 +231,36 @@ export interface AppSettings {
   launchAtStartup: boolean
   theme: 'system' | 'light' | 'dark'
   defaultView: 'sending' | 'testing'
+}
+
+export interface StatsRow {
+  name: string
+  delivered: number
+  uniqueOpenRate: number
+  clickRate: number
+  bounceRate: number
+  spamCount: number
+}
+
+export interface CacheEntry<T> {
+  data: T
+  fetchedAt: string
+}
+
+export interface StatsCacheEntry {
+  stats: AggregatedStats
+  dailyStats: DailyStats[]
+  providerRows?: StatsRow[]
+  categoryRows?: StatsRow[]
+  fetchedAt: string
+}
+
+export interface EmailCacheEntry {
+  data: {
+    message: Message
+    htmlBody: string | null
+  }
+  fetchedAt: string
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
