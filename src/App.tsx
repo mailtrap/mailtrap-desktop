@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAppStore } from './stores/appStore'
 import { useTrayNavigation } from './hooks/useNavigation'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
 import TitleBar from './components/layout/TitleBar'
 import TokenSetup from './components/auth/TokenSetup'
@@ -16,7 +17,7 @@ function AuthenticatedApp() {
   const [defaultRoute, setDefaultRoute] = useState<string | null>(null)
 
   useEffect(() => {
-    window.electron.getSettings().then((s: any) => {
+    window.electron.getSettings().then((s) => {
       const view = s?.defaultView === 'sending' ? '/sending' : '/sandbox'
       setDefaultRoute(view)
     })
@@ -70,13 +71,15 @@ export default function App() {
     <div className="flex h-full flex-col bg-navy-void">
       <TitleBar />
       <div className="flex-1 overflow-hidden">
-        {isAuthenticated ? (
-          <AuthenticatedApp />
-        ) : (
-          <Routes>
-            <Route path="*" element={<TokenSetup />} />
-          </Routes>
-        )}
+        <ErrorBoundary>
+          {isAuthenticated ? (
+            <AuthenticatedApp />
+          ) : (
+            <Routes>
+              <Route path="*" element={<TokenSetup />} />
+            </Routes>
+          )}
+        </ErrorBoundary>
       </div>
     </div>
   )

@@ -19,5 +19,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/env.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/env.d.ts", "electron/api/types.ts"]
 }
