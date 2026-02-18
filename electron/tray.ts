@@ -150,11 +150,6 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
       byProject[key].push(inbox)
     }
 
-    // Compute column widths for alignment
-    const NAME_COL = Math.max(16, ...visibleInboxes.map((i) => i.name.length)) + 2
-    const UNREAD_COL = 10
-    const DATE_COL = 20
-
     for (const [projectName, projectInboxes] of Object.entries(byProject)) {
 
       // Project name header
@@ -167,14 +162,13 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
 
       // Indented inboxes — aligned columns
       for (const inbox of projectInboxes) {
-        const nameCol = inbox.name.padEnd(NAME_COL)
-        const unreadCol = `${inbox.unreadCount}/${inbox.totalCount}`.padEnd(UNREAD_COL)
-        const dateCol = inbox.lastEmailDate ? inbox.lastEmailDate.padEnd(DATE_COL) : ''.padEnd(DATE_COL)
-        const subjectCol = inbox.lastEmailSubject ? `"${truncate(inbox.lastEmailSubject, 28)}"` : ''
+        const nameWithCount = `${inbox.name} (${inbox.unreadCount}/${inbox.totalCount})`
+        const subject = inbox.lastEmailSubject ? `'${truncate(inbox.lastEmailSubject, 28)}'` : ''
+        const dateStr = inbox.lastEmailDate ? `(${inbox.lastEmailDate})` : ''
 
         menu.append(
           new MenuItem({
-            label: `    ${nameCol}${unreadCol}${dateCol}${subjectCol}`,
+            label: `    ${nameWithCount}  ${subject}  ${dateStr}`.trimEnd(),
             toolTip: inbox.lastEmailSubject || undefined,
             click: () => {
               focusAndNavigate(mainWindow, `sandbox/inbox/${inbox.id}`)

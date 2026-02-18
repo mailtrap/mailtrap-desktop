@@ -6,6 +6,7 @@ interface StatsTableProps {
   linkLabel: string
   linkUrl: string
   bounceThreshold: number
+  rowLinkBuilder?: (name: string) => string
 }
 
 function formatCount(n: number): string {
@@ -17,7 +18,7 @@ function formatPercent(rate: number): string {
   return (rate * 100).toFixed(2) + '%'
 }
 
-export function StatsTable({ title, rows, linkLabel, linkUrl, bounceThreshold }: StatsTableProps) {
+export function StatsTable({ title, rows, linkLabel, linkUrl, bounceThreshold, rowLinkBuilder }: StatsTableProps) {
   if (rows.length === 0) return null
 
   return (
@@ -37,7 +38,20 @@ export function StatsTable({ title, rows, linkLabel, linkUrl, bounceThreshold }:
           <tbody>
             {rows.map((row) => (
               <tr key={row.name}>
-                <td className="truncate !text-blue-neutral" title={row.name}>{row.name}</td>
+                <td className="truncate" title={row.name}>
+                  {rowLinkBuilder ? (
+                    <a
+                      href={rowLinkBuilder(row.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="!text-blue-neutral hover:!text-blue-medium hover:underline"
+                    >
+                      {row.name}
+                    </a>
+                  ) : (
+                    <span className="!text-blue-neutral">{row.name}</span>
+                  )}
+                </td>
                 <td className="text-right">{formatCount(row.delivered)}</td>
                 <td className="text-right">{formatPercent(row.uniqueOpenRate)}</td>
                 <td className="text-right">{formatPercent(row.clickRate)}</td>
