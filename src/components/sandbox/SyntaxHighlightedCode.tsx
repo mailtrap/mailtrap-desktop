@@ -7,9 +7,10 @@ interface SyntaxHighlightedCodeProps {
   code: string
   language: string
   fallback: string
+  wrap?: boolean
 }
 
-export function SyntaxHighlightedCode({ code, language, fallback }: SyntaxHighlightedCodeProps) {
+export function SyntaxHighlightedCode({ code, language, fallback, wrap }: SyntaxHighlightedCodeProps) {
   const highlighted = useMemo(() => {
     if (!code) return ''
     try {
@@ -26,9 +27,9 @@ export function SyntaxHighlightedCode({ code, language, fallback }: SyntaxHighli
   }
 
   return (
-    <div className="overflow-auto p-5">
+    <div className={`p-5 ${wrap ? 'overflow-y-auto' : 'overflow-auto'}`}>
       <pre
-        className="font-mono text-[13px] leading-[1.6]"
+        className={`font-mono text-[13px] leading-[1.6] ${wrap ? 'whitespace-pre-wrap break-all' : ''}`}
         style={{ background: 'transparent', margin: 0, padding: 0 }}
       >
         <code

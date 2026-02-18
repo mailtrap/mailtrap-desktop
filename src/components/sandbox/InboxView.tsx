@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import type { Message, MessageSummary, InboxSummary } from '../../../electron/api/types'
 import { MessageListPanel } from './MessageListPanel'
 import { SyntaxHighlightedCode } from './SyntaxHighlightedCode'
@@ -202,11 +202,11 @@ export default function InboxView() {
   }, [activeTab, fetchTabContent])
 
   // ── Tab definitions ──
-  const tabs: { key: Tab; label: string }[] = [
+  const tabs: { key: Tab; label: string; disabled?: boolean }[] = [
     { key: 'html', label: 'HTML' },
-    { key: 'html_source', label: 'HTML Source' },
-    { key: 'text', label: 'Text' },
-    { key: 'raw', label: 'Raw' },
+    { key: 'html_source', label: 'HTML Source', disabled: !message?.html_source_path },
+    { key: 'text', label: 'Text', disabled: !message?.txt_path },
+    { key: 'raw', label: 'Raw', disabled: !message?.raw_path },
     { key: 'tech_info', label: 'Tech Info' }
   ]
 
@@ -236,21 +236,6 @@ export default function InboxView() {
           </div>
         ) : message ? (
           <>
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 border-b border-grey-dark px-5 py-2 text-body-s">
-              <Link to="/sandbox" className="text-grey-deep hover:text-blue-neutral">
-                Sandboxes
-              </Link>
-              <span className="text-navy-300">&gt;</span>
-              <span className="truncate text-navy-air">
-                {inboxMeta?.name || 'Inbox'}
-              </span>
-              <span className="text-navy-300">&gt;</span>
-              <span className="truncate text-navy-air">
-                {message.subject || '(no subject)'}
-              </span>
-            </div>
-
             {/* Subject + Meta */}
             <div className="border-b border-grey-dark px-5 py-3">
               <div className="flex items-start justify-between">
@@ -327,11 +312,14 @@ export default function InboxView() {
                 {tabs.map((tab) => (
                   <button
                     key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => !tab.disabled && setActiveTab(tab.key)}
+                    disabled={tab.disabled}
                     className={`border-b-2 px-3.5 py-2 text-tab transition-colors ${
-                      activeTab === tab.key
-                        ? 'border-blue-neutral text-navy-air'
-                        : 'border-transparent text-grey-muted hover:text-navy-air'
+                      tab.disabled
+                        ? 'border-transparent text-grey-dark cursor-not-allowed'
+                        : activeTab === tab.key
+                          ? 'border-blue-neutral text-navy-air'
+                          : 'border-transparent text-grey-muted hover:text-navy-air'
                     }`}
                   >
                     {tab.label}
@@ -397,7 +385,7 @@ export default function InboxView() {
                   )}
 
                   {activeTab === 'html_source' && (
-                    <SyntaxHighlightedCode code={tabContent} language="markup" fallback="No HTML source available" />
+                    <SyntaxHighlightedCode code={tabContent} language="markup" fallback="No HTML source available" wrap />
                   )}
 
                   {activeTab === 'text' && (

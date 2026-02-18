@@ -396,14 +396,14 @@ export default function SendingDash() {
                     title="Mailbox Provi..."
                     rows={providerRows}
                     linkLabel="See All"
-                    linkUrl={`${analyticsBase}?tab=mailbox_providers`}
+                    linkUrl="https://mailtrap.io/sending/analytics/esp"
                     bounceThreshold={BOUNCE_THRESHOLD}
                   />
                   <StatsTable
                     title="Category"
                     rows={categoryRows}
                     linkLabel="See All"
-                    linkUrl={`${analyticsBase}?tab=categories`}
+                    linkUrl="https://mailtrap.io/sending/analytics/categories"
                     bounceThreshold={BOUNCE_THRESHOLD}
                   />
                 </div>
@@ -417,14 +417,14 @@ export default function SendingDash() {
                     data={openRateData}
                     color="#4C83EE"
                     linkLabel="Opened Emails"
-                    linkUrl={analyticsBase}
+                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22open%22%5D%7D%5D"
                   />
                   <RateChart
                     title="Click Rate %"
                     data={clickRateData}
                     color="#4C83EE"
                     linkLabel="Email Clicks"
-                    linkUrl={analyticsBase}
+                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22click%22%5D%7D%5D"
                   />
                   <RateChart
                     title="Bounce Rate %"
@@ -433,7 +433,7 @@ export default function SendingDash() {
                     threshold={BOUNCE_THRESHOLD}
                     thresholdLabel={`threshold ${BOUNCE_THRESHOLD}.00%`}
                     linkLabel="Bounced Emails"
-                    linkUrl={analyticsBase}
+                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22bounce%22%5D%7D%5D"
                     isCritical={isBounceAboveThreshold}
                   />
                   <RateChart
@@ -443,7 +443,7 @@ export default function SendingDash() {
                     threshold={SPAM_THRESHOLD}
                     thresholdLabel={`threshold ${SPAM_THRESHOLD.toFixed(2)}%`}
                     linkLabel="Spam Complaints"
-                    linkUrl={analyticsBase}
+                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22spam%22%5D%7D%5D"
                   />
                 </div>
               )}
