@@ -242,6 +242,13 @@ export default function SendingDash() {
 
   const analyticsBase = 'https://mailtrap.io/sending/analytics'
   const isBounceAboveThreshold = stats ? stats.bounce_rate * 100 > BOUNCE_THRESHOLD : false
+
+  const renderEndDate = new Date().toISOString().split('T')[0]
+  const renderStartDate = new Date(Date.now() - (timeRange === '7d' ? 7 : 30) * 86400000).toISOString().split('T')[0]
+  const espRowLinkBuilder = (name: string) =>
+    `https://mailtrap.io/sending/analytics/esp?email_service_providers=${encodeURIComponent(name)}&end_date=${renderEndDate}&start_date=${renderStartDate}`
+  const categoryRowLinkBuilder = (name: string) =>
+    `https://mailtrap.io/sending/analytics/categories?categories=${encodeURIComponent(name)}&end_date=${renderEndDate}&start_date=${renderStartDate}`
   const domainItems = domains ?? []
 
   if (domainsLoading && domainItems.length === 0) {
@@ -398,6 +405,7 @@ export default function SendingDash() {
                     linkLabel="See All"
                     linkUrl="https://mailtrap.io/sending/analytics/esp"
                     bounceThreshold={BOUNCE_THRESHOLD}
+                    rowLinkBuilder={espRowLinkBuilder}
                   />
                   <StatsTable
                     title="Category"
@@ -405,6 +413,7 @@ export default function SendingDash() {
                     linkLabel="See All"
                     linkUrl="https://mailtrap.io/sending/analytics/categories"
                     bounceThreshold={BOUNCE_THRESHOLD}
+                    rowLinkBuilder={categoryRowLinkBuilder}
                   />
                 </div>
               )}

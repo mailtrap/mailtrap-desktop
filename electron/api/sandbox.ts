@@ -166,17 +166,11 @@ export function toMessageSummary(msg: Message): MessageSummary {
   }
 }
 
-function formatShortDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const isToday =
-    date.getDate() === now.getDate() &&
-    date.getMonth() === now.getMonth() &&
-    date.getFullYear() === now.getFullYear()
-
-  if (isToday) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+export function formatShortDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
