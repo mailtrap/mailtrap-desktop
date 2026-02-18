@@ -41,7 +41,7 @@ export function MessageListPanel({
   inboxName,
 }: MessageListPanelProps) {
   return (
-    <div className="flex w-[280px] shrink-0 flex-col border-r border-grey-dark bg-navy-700">
+    <div className="flex w-[420px] shrink-0 flex-col border-r border-grey-dark bg-navy-700">
       {/* Inbox header */}
       <div className="flex items-center gap-2 border-b border-grey-dark px-3 py-2.5">
         <Link
@@ -56,7 +56,7 @@ export function MessageListPanel({
         <span className="truncate text-item-label font-semibold text-navy-air">
           {inboxName}
         </span>
-        <span className="ml-auto text-body-s text-grey-deep">
+        <span className="ml-auto text-body-s text-grey-muted">
           {messages.length}
         </span>
       </div>
@@ -83,35 +83,38 @@ export function MessageListPanel({
           </div>
         ) : (
           <>
-            {messages.map((msg) => (
-              <button
-                key={msg.id}
-                onClick={() => onSelectMessage(msg.id)}
-                className={`w-full border-b border-grey-dark/30 px-3 py-2.5 text-left transition-colors ${
-                  selectedId === msg.id
-                    ? 'bg-blue-400/15'
-                    : 'hover:bg-grey-solid'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span
-                    className={`truncate leading-tight ${
-                      !msg.isRead
-                        ? 'text-email-default text-navy-air'
-                        : 'text-email-read text-navy-air'
-                    }`}
-                  >
-                    {msg.subject || '(no subject)'}
-                  </span>
-                  <span className="shrink-0 text-[11px] leading-tight text-grey-deep">
-                    {timeAgo(msg.sentAt)}
-                  </span>
-                </div>
-                <div className="mt-0.5 truncate text-[11px] text-grey-deep">
-                  to: &lt;{msg.toEmail}&gt;
-                </div>
-              </button>
-            ))}
+            {messages.map((msg) => {
+              const isSelected = selectedId === msg.id
+              return (
+                <button
+                  key={msg.id}
+                  onClick={() => onSelectMessage(msg.id)}
+                  className={`w-full border-b border-grey-dark/30 px-3 py-2.5 text-left transition-colors ${
+                    isSelected ? 'bg-blue-neutral' : 'hover:bg-grey-solid'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span
+                      className={`truncate leading-tight ${
+                        isSelected
+                          ? 'text-white'
+                          : !msg.isRead
+                            ? 'text-email-default text-navy-air'
+                            : 'text-email-read text-navy-air'
+                      }`}
+                    >
+                      {msg.subject || '(no subject)'}
+                    </span>
+                    <span className={`shrink-0 text-[11px] leading-tight ${isSelected ? 'text-white/70' : 'text-grey-muted'}`}>
+                      {timeAgo(msg.sentAt)}
+                    </span>
+                  </div>
+                  <div className={`mt-0.5 truncate text-[11px] ${isSelected ? 'text-white/70' : 'text-grey-muted'}`}>
+                    to: &lt;{msg.toEmail}&gt;
+                  </div>
+                </button>
+              )
+            })}
             {hasMore && (
               <button
                 onClick={onLoadMore}
