@@ -55,6 +55,7 @@ vi.mock('fs', () => ({
 import { registerIpcHandlers } from '../../ipc/handlers'
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling } from '../../polling'
 import { initApiClients, destroyApiClients } from '../../api/client'
+import { clearStoreCache } from '../../store'
 
 const fakeEvent = {} as IpcMainInvokeEvent
 
@@ -65,6 +66,7 @@ function invoke(channel: string, ...args: unknown[]): unknown {
 }
 
 beforeEach(() => {
+  clearStoreCache()
   handlers.clear()
   storeData = {}
   apiClientInitialized = false

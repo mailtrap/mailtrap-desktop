@@ -3,7 +3,6 @@ import { useAppStore } from '../../stores/appStore'
 import { Button } from '../ui/Button'
 
 interface AppSettings {
-  pollingIntervalMs: number
   testingPollingIntervalMs: number
   sendingPollingIntervalMs: number
   launchAtStartup: boolean

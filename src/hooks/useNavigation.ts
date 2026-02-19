@@ -9,8 +9,9 @@ export function useTrayNavigation(): void {
   const navigate = useNavigate()
 
   useEffect(() => {
-    window.electron.onNavigate((route: string) => {
+    const unsubscribe = window.electron.onNavigate((route: string) => {
       navigate(`/${route}`)
     })
+    return unsubscribe
   }, [navigate])
 }

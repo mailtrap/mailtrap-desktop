@@ -34,6 +34,7 @@ export function useCacheFetch<T>({
   const [error, setError] = useState<string | null>(null)
   const [isFromCache, setIsFromCache] = useState(false)
   const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null)
+  const dataRef = useRef<T | null>(null)
 
   // Refs to avoid stale closures and unnecessary effect re-runs
   const getCachedRef = useRef(getCached)
@@ -46,11 +47,7 @@ export function useCacheFetch<T>({
   isEmptyRef.current = isEmpty
 
   const fetchFresh = useCallback(async () => {
-    let hasData = false
-    setData((prev) => {
-      hasData = prev !== null && !isEmptyRef.current(prev)
-      return prev
-    })
+    const hasData = dataRef.current !== null && !isEmptyRef.current(dataRef.current)
 
     const startTime = Date.now()
     if (hasData) {
@@ -62,20 +59,18 @@ export function useCacheFetch<T>({
     try {
       const freshData = await getFreshRef.current()
       setData(freshData)
+      dataRef.current = freshData
       setIsFromCache(false)
       setLastFetchedAt(new Date().toISOString())
       setError(null)
       saveToCacheRef.current?.(freshData)
     } catch (err) {
-      setData((prev) => {
-        if (prev === null || isEmptyRef.current(prev)) {
-          setError(err instanceof Error ? err.message : 'Failed to load data')
-        }
-        return prev
-      })
+      if (dataRef.current === null || isEmptyRef.current(dataRef.current)) {
+        setError(err instanceof Error ? err.message : 'Failed to load data')
+      }
     } finally {
       const elapsed = Date.now() - startTime
-      const remaining = Math.max(0, 1000 - elapsed)
+      const remaining = Math.max(0, 300 - elapsed)
       setTimeout(() => {
         setLoading(false)
         setRefreshing(false)
@@ -92,6 +87,7 @@ export function useCacheFetch<T>({
         const cached = await getCachedRef.current()
         if (!cancelled && cached?.data && !isEmptyRef.current(cached.data)) {
           setData(cached.data)
+          dataRef.current = cached.data
           setIsFromCache(true)
           setLastFetchedAt(cached.fetchedAt ?? null)
           setLoading(false)

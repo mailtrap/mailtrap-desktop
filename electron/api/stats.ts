@@ -134,40 +134,39 @@ export async function getSendingDomains(
 // ── Helper: build tray-friendly stream summaries ──
 
 export async function getStreamSummaries(accountId: number): Promise<SendingStreamSummary[]> {
-  const summaries: SendingStreamSummary[] = []
-
   try {
     const domains = await getSendingDomains(accountId)
 
-    // Get date range for last 7 days
     const endDate = new Date().toISOString().split('T')[0]
     const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0]
 
-    // Fetch stats per domain so each gets its own numbers
-    for (const domain of domains) {
-      try {
-        const stats = await getAggregatedStats(accountId, startDate, endDate, [domain.id])
-        summaries.push({
+    const statsResults = await Promise.allSettled(
+      domains.map((domain) =>
+        getAggregatedStats(accountId, startDate, endDate, [domain.id])
+      )
+    )
+
+    return domains.map((domain, i) => {
+      const result = statsResults[i]
+      if (result.status === 'fulfilled') {
+        const stats = result.value
+        return {
           id: String(domain.id),
           name: domain.domain_name,
           sentCount: stats.delivery_count + stats.bounce_count,
           deliveryRate: stats.delivery_rate * 100
-        })
-      } catch {
-        // If stats fail for one domain, still show it with zero
-        summaries.push({
-          id: String(domain.id),
-          name: domain.domain_name,
-          sentCount: 0,
-          deliveryRate: null
-        })
+        }
       }
-    }
+      return {
+        id: String(domain.id),
+        name: domain.domain_name,
+        sentCount: 0,
+        deliveryRate: null
+      }
+    })
   } catch {
-    // If sending domains aren't available, return empty
+    return []
   }
-
-  return summaries
 }

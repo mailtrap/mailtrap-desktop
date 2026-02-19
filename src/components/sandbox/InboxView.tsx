@@ -468,7 +468,7 @@ function HtmlPreview({
           title="Email HTML Preview"
           srcDoc={htmlBody}
           className="h-full w-full border-0 bg-white"
-          sandbox="allow-same-origin"
+          sandbox=""
         />
       </div>
     )
@@ -487,7 +487,7 @@ function HtmlPreview({
               title="Email HTML Preview \u2014 Tablet"
               srcDoc={htmlBody}
               className="h-full w-full border-0 bg-white"
-              sandbox="allow-same-origin"
+              sandbox=""
             />
           </div>
         </div>
@@ -509,7 +509,7 @@ function HtmlPreview({
               title="Email HTML Preview \u2014 Mobile"
               srcDoc={htmlBody}
               className="h-full w-full border-0 bg-white"
-              sandbox="allow-same-origin"
+              sandbox=""
             />
           </div>
           <div className="flex items-center justify-center bg-navy-void py-3">

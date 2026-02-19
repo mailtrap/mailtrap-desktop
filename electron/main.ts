@@ -2,7 +2,6 @@ import { app, BrowserWindow, shell, nativeImage } from 'electron'
 import { join } from 'path'
 import { createTray } from './tray'
 import { registerIpcHandlers } from './ipc/handlers'
-import { startPolling, stopPolling } from './polling'
 import { getSettings } from './store'
 
 // Set app name (visible in dock & menu bar instead of "Electron")

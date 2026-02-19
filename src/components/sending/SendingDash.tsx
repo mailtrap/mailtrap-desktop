@@ -6,6 +6,7 @@ import { Button } from '../ui/Button'
 import { LastUpdatedIndicator } from '../ui/LastUpdatedIndicator'
 import { useCacheFetch } from '../../hooks/useCacheFetch'
 import { usePollingInterval } from '../../hooks/usePollingInterval'
+import { formatCount, formatPercent } from '../../utils/formatters'
 import type {
   SendingDomain,
   AggregatedStats,
@@ -20,14 +21,7 @@ type TimeRange = '7d' | '30d'
 const BOUNCE_THRESHOLD = 5 // 5%
 const SPAM_THRESHOLD = 0.1 // 0.1%
 
-function formatCount(n: number): string {
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
-  return String(n)
-}
 
-function formatPercent(rate: number): string {
-  return (rate * 100).toFixed(2) + '%'
-}
 
 function toStatsRow(p: ProviderStats): StatsRow {
   return {
@@ -207,7 +201,7 @@ export default function SendingDash() {
       }
     } finally {
       const elapsed = Date.now() - startTime
-      const remaining = Math.max(0, 1000 - elapsed)
+      const remaining = Math.max(0, 300 - elapsed)
       setTimeout(() => {
         setStatsLoading(false)
         setStatsRefreshing(false)
@@ -426,14 +420,14 @@ export default function SendingDash() {
                     data={openRateData}
                     color="#4C83EE"
                     linkLabel="Opened Emails"
-                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22open%22%5D%7D%5D"
+                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22open%22%5D%7D%5D`}
                   />
                   <RateChart
                     title="Click Rate %"
                     data={clickRateData}
                     color="#4C83EE"
                     linkLabel="Email Clicks"
-                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22click%22%5D%7D%5D"
+                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22click%22%5D%7D%5D`}
                   />
                   <RateChart
                     title="Bounce Rate %"
@@ -442,7 +436,7 @@ export default function SendingDash() {
                     threshold={BOUNCE_THRESHOLD}
                     thresholdLabel={`threshold ${BOUNCE_THRESHOLD}.00%`}
                     linkLabel="Bounced Emails"
-                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22bounce%22%5D%7D%5D"
+                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22bounce%22%5D%7D%5D`}
                     isCritical={isBounceAboveThreshold}
                   />
                   <RateChart
@@ -452,7 +446,7 @@ export default function SendingDash() {
                     threshold={SPAM_THRESHOLD}
                     thresholdLabel={`threshold ${SPAM_THRESHOLD.toFixed(2)}%`}
                     linkLabel="Spam Complaints"
-                    linkUrl="https://mailtrap.io/sending/email_logs?end_date=2026-02-18&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22spam%22%5D%7D%5D"
+                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22spam%22%5D%7D%5D`}
                   />
                 </div>
               )}

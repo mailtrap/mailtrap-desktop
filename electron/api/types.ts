@@ -225,7 +225,6 @@ export interface SendingStreamSummary {
 // ── Settings ──
 
 export interface AppSettings {
-  pollingIntervalMs: number // legacy, kept for migration
   testingPollingIntervalMs: number
   sendingPollingIntervalMs: number
   launchAtStartup: boolean
@@ -264,7 +263,7 @@ export interface EmailCacheEntry {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  pollingIntervalMs: 30000,
+
   testingPollingIntervalMs: 60000,    // 1 minute
   sendingPollingIntervalMs: 300000,   // 5 minutes
   launchAtStartup: false,
