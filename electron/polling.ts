@@ -34,8 +34,8 @@ async function pollTesting(): Promise<void> {
     updateTrayData(latestInboxes, latestStreams)
     if (inboxes.length > 0) saveInboxSummariesCache(inboxes)
     console.log(`[Polling:Testing] Updated ${inboxes.length} inboxes`)
-  } catch (err: any) {
-    console.error('[Polling:Testing] Failed:', err.message)
+  } catch (err: unknown) {
+    console.error('[Polling:Testing] Failed:', err instanceof Error ? err.message : String(err))
   }
 }
 
@@ -72,8 +72,8 @@ async function pollSending(): Promise<void> {
     latestStreams = streams
     updateTrayData(latestInboxes, latestStreams)
     console.log(`[Polling:Sending] Updated ${streams.length} streams`)
-  } catch (err: any) {
-    console.error('[Polling:Sending] Failed:', err.message)
+  } catch (err: unknown) {
+    console.error('[Polling:Sending] Failed:', err instanceof Error ? err.message : String(err))
   }
 }
 

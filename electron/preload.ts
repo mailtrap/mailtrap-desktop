@@ -71,7 +71,7 @@ export interface ElectronAPI {
   saveSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>
 
   // Navigation (tray click -> renderer)
-  onNavigate: (callback: (route: string) => void) => void
+  onNavigate: (callback: (route: string) => void) => () => void
 }
 
 const api: ElectronAPI = {
@@ -134,7 +134,9 @@ const api: ElectronAPI = {
 
   // Navigation (tray click -> renderer)
   onNavigate: (callback) => {
-    ipcRenderer.on('navigate', (_event, route: string) => callback(route))
+    const listener = (_event: Electron.IpcRendererEvent, route: string) => callback(route)
+    ipcRenderer.on('navigate', listener)
+    return () => { ipcRenderer.removeListener('navigate', listener) }
   },
 }
 

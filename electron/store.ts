@@ -42,26 +42,38 @@ interface StoreData {
   settings: AppSettings
 }
 
+let storeCache: StoreData | null = null
+
 function readStore(): StoreData {
+  if (storeCache) return storeCache
+
   const storePath = getStorePath()
   if (!existsSync(storePath)) {
-    return { settings: { ...DEFAULT_SETTINGS } }
+    storeCache = { settings: { ...DEFAULT_SETTINGS } }
+    return storeCache
   }
   try {
     const raw = readFileSync(storePath, 'utf-8')
-    return JSON.parse(raw) as StoreData
+    storeCache = JSON.parse(raw) as StoreData
+    return storeCache
   } catch {
-    return { settings: { ...DEFAULT_SETTINGS } }
+    storeCache = { settings: { ...DEFAULT_SETTINGS } }
+    return storeCache
   }
 }
 
 function writeStore(data: StoreData): void {
+  storeCache = data
   const storePath = getStorePath()
   const dir = join(storePath, '..')
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
   writeFileSync(storePath, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+export function clearStoreCache(): void {
+  storeCache = null
 }
 
 // ── Token Management ──

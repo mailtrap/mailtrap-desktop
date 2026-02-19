@@ -1,6 +1,6 @@
 import { Tray, Menu, MenuItem, BrowserWindow, nativeImage, shell, app } from 'electron'
 import { join } from 'path'
-import { readFileSync, existsSync } from 'fs'
+import { existsSync } from 'fs'
 import type { InboxSummary, SendingStreamSummary } from './api/types'
 import { isInboxVisibleInTray, getInboxSummariesCache } from './store'
 
@@ -76,6 +76,10 @@ function createTrayIcon(): Electron.NativeImage {
 
 export function createTray(mainWindow: BrowserWindow): void {
   try {
+    if (tray) {
+      tray.destroy()
+      tray = null
+    }
     mainWindowRef = mainWindow
     const icon = createTrayIcon()
     tray = new Tray(icon)

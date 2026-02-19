@@ -26,13 +26,6 @@ export async function getInboxes(accountId: number): Promise<Inbox[]> {
   return data
 }
 
-export async function getInbox(accountId: number, inboxId: number): Promise<Inbox> {
-  const client = getApiClient()
-  const { data } = await client.get<Inbox>(
-    `/api/accounts/${accountId}/inboxes/${inboxId}`
-  )
-  return data
-}
 
 // ── Messages ──
 
@@ -113,42 +106,45 @@ export async function getMessageHtmlAnalysis(
 // ── Helper: build tray-friendly summaries ──
 
 export async function getInboxSummaries(accountId: number): Promise<InboxSummary[]> {
-  // The projects endpoint returns inboxes embedded in each project
   const projects = await getProjects(accountId)
-  const summaries: InboxSummary[] = []
 
+  const entries: { project: typeof projects[0]; inbox: typeof projects[0]['inboxes'][0] }[] = []
   for (const project of projects) {
     for (const inbox of project.inboxes) {
-      let lastSubject: string | null = null
-      let lastDate: string | null = null
-
-      if (inbox.emails_count > 0) {
-        try {
-          const messages = await getMessages(accountId, inbox.id, 1)
-          if (messages.length > 0) {
-            lastSubject = messages[0].subject
-            lastDate = formatShortDate(messages[0].created_at)
-          }
-        } catch {
-          // Ignore — we'll just show no last email
-        }
-      }
-
-      summaries.push({
-        id: inbox.id,
-        name: inbox.name,
-        projectName: project.name,
-        sentCount: inbox.sent_messages_count,
-        unreadCount: inbox.emails_unread_count,
-        totalCount: inbox.emails_count,
-        lastEmailSubject: lastSubject,
-        lastEmailDate: lastDate,
-        lastMessageAt: inbox.last_message_sent_at
-      })
+      entries.push({ project, inbox })
     }
   }
 
-  return summaries
+  const messageResults = await Promise.allSettled(
+    entries.map(({ inbox }) =>
+      inbox.emails_count > 0
+        ? getMessages(accountId, inbox.id, 1)
+        : Promise.resolve(null)
+    )
+  )
+
+  return entries.map(({ project, inbox }, i) => {
+    let lastSubject: string | null = null
+    let lastDate: string | null = null
+
+    const result = messageResults[i]
+    if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
+      lastSubject = result.value[0].subject
+      lastDate = formatShortDate(result.value[0].created_at)
+    }
+
+    return {
+      id: inbox.id,
+      name: inbox.name,
+      projectName: project.name,
+      sentCount: inbox.sent_messages_count,
+      unreadCount: inbox.emails_unread_count,
+      totalCount: inbox.emails_count,
+      lastEmailSubject: lastSubject,
+      lastEmailDate: lastDate,
+      lastMessageAt: inbox.last_message_sent_at
+    }
+  })
 }
 
 export function toMessageSummary(msg: Message): MessageSummary {

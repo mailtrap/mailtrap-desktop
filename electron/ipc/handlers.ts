@@ -144,16 +144,15 @@ export function registerIpcHandlers(): void {
     }
   ))
 
-  ipcMain.handle(
-    'sandbox:get-message-content',
-    async (_event, path: string) => {
+  ipcMain.handle('sandbox:get-message-content', withAuth(
+    async (_accountId, path: string) => {
       try {
         return await getMessageContentByPath(path)
       } catch {
         return ''
       }
     }
-  )
+  ))
 
   ipcMain.handle('sandbox:get-spam-report', withAuth(
     (accountId, inboxId: number, messageId: number) =>

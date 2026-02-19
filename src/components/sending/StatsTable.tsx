@@ -1,4 +1,5 @@
 import type { StatsRow } from '../../../electron/api/types'
+import { formatCount, formatPercent } from '../../utils/formatters'
 
 interface StatsTableProps {
   title: string
@@ -7,15 +8,6 @@ interface StatsTableProps {
   linkUrl: string
   bounceThreshold: number
   rowLinkBuilder?: (name: string) => string
-}
-
-function formatCount(n: number): string {
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
-  return String(n)
-}
-
-function formatPercent(rate: number): string {
-  return (rate * 100).toFixed(2) + '%'
 }
 
 export function StatsTable({ title, rows, linkLabel, linkUrl, bounceThreshold, rowLinkBuilder }: StatsTableProps) {

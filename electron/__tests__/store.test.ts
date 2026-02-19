@@ -40,11 +40,13 @@ import {
   saveEmailCache,
   getEmailCache,
   getSettings,
-  saveSettings
+  saveSettings,
+  clearStoreCache
 } from '../store'
 import { DEFAULT_SETTINGS } from '../api/types'
 
 beforeEach(() => {
+  clearStoreCache()
   // Reset the store between tests by deleting the file
   try {
     if (existsSync(mockStorePath)) {
