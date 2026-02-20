@@ -1,3 +1,4 @@
+import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { timeAgo } from '../../utils/formatters'
 import type { MessageSummary } from '../../../electron/api/types'
@@ -23,6 +24,23 @@ export function MessageListPanel({
   inboxId,
   inboxName,
 }: MessageListPanelProps) {
+  const [search, setSearch] = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
+
+  // Reset search when switching inboxes
+  useEffect(() => { setSearch('') }, [inboxId])
+
+  const filteredMessages = useMemo(() => {
+    if (!search.trim()) return messages
+    const q = search.toLowerCase()
+    return messages.filter(
+      (msg) =>
+        (msg.subject || '').toLowerCase().includes(q) ||
+        msg.toEmail.toLowerCase().includes(q) ||
+        msg.fromEmail.toLowerCase().includes(q)
+    )
+  }, [messages, search])
+
   return (
     <div className="flex w-[420px] shrink-0 flex-col border-r border-grey-dark bg-navy-700">
       {/* Inbox header */}
@@ -40,17 +58,38 @@ export function MessageListPanel({
           {inboxName}
         </span>
         <span className="ml-auto text-body-s text-grey-muted">
-          {messages.length}
+          {search ? `${filteredMessages.length}/${messages.length}` : messages.length}
         </span>
       </div>
 
-      {/* Search bar (visual only) */}
+      {/* Search bar */}
       <div className="border-b border-grey-dark px-3 py-2">
         <div className="flex items-center gap-2 rounded-md bg-grey-solid px-2.5 py-1.5">
-          <svg className="h-3.5 w-3.5 text-grey-deep" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-          </svg>
-          <span className="text-body-s text-grey-deep">Search...</span>
+          {!searchFocused && !search && (
+            <svg className="h-3.5 w-3.5 shrink-0 text-grey-deep" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+          )}
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filter..."
+            className="w-full bg-transparent text-body-s text-navy-air placeholder-grey-deep outline-none"
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="shrink-0 text-grey-deep hover:text-navy-air"
+              aria-label="Clear search"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
@@ -60,13 +99,13 @@ export function MessageListPanel({
           <div className="flex items-center justify-center py-12">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-neutral border-t-transparent" />
           </div>
-        ) : messages.length === 0 ? (
+        ) : filteredMessages.length === 0 ? (
           <div className="px-3 py-8 text-center text-body-s text-grey-deep">
-            No messages yet
+            {search ? 'No matching messages' : 'No messages yet'}
           </div>
         ) : (
           <>
-            {messages.map((msg) => {
+            {filteredMessages.map((msg) => {
               const isSelected = selectedId === msg.id
               return (
                 <button
@@ -98,7 +137,7 @@ export function MessageListPanel({
                 </button>
               )
             })}
-            {hasMore && (
+            {hasMore && !search && (
               <button
                 onClick={onLoadMore}
                 className="w-full py-2.5 text-center text-body-s text-blue-neutral hover:text-blue-medium"
