@@ -462,12 +462,12 @@ function HtmlPreview({
 }) {
   if (devicePreview === 'desktop') {
     return (
-      <div className="h-full">
+      <div className="h-full p-4">
         <iframe
           key={`${messageId}-desktop`}
           title="Email HTML Preview"
           srcDoc={htmlBody}
-          className="h-full w-full border-0 bg-white"
+          className="h-full w-full rounded-lg border-0 bg-white"
           sandbox=""
         />
       </div>
