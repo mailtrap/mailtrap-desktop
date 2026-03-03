@@ -19,11 +19,7 @@
     color: #fbfcfc;            /* navy.air  — foreground.primary (dark) */
   }
 
-  /* MTUI scrollbar (global.js) — thin, 10px, transparent track, themed thumb */
-  * {
-    scrollbar-width: thin;
-  }
-
+  /* MTUI scrollbar (global.js) — 6px, transparent track, themed thumb */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -39,15 +35,15 @@
   }
 
   :hover::-webkit-scrollbar-thumb {
-    background: rgba(107, 122, 140, 0.38); /* navy.muted with alpha */
+    background: rgba(77, 90, 106, 0.38); /* grey.deep with alpha */
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(107, 122, 140, 0.55);
+    background: rgba(77, 90, 106, 0.55);
   }
 
   ::-webkit-scrollbar-thumb:active {
-    background: rgba(107, 122, 140, 0.7);
+    background: rgba(77, 90, 106, 0.7);
   }
 
   /* MTUI headings (global.js) — line-height 1.21 */
