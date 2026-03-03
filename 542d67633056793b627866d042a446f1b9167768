@@ -1,0 +1,23 @@
+src/styles/globals.css
+  e11b2ee77c4f494d 22,38,42,46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "542d67633056793b627866d042a446f1b9167768",
+  "prompts": {
+    "e11b2ee77c4f494d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cc8e4dcf-c722-44b9-9ef2-825bf56075ae",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "romanadamchik <roman.adamchik@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 8,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
