@@ -40,8 +40,12 @@ async function pollTesting(): Promise<void> {
 }
 
 export function startTestingPolling(): void {
-  pollTesting()
   const settings = getSettings()
+  if (!settings.sandboxEnabled) {
+    console.log('[Polling:Testing] Skipped — sandbox disabled')
+    return
+  }
+  pollTesting()
   const interval = settings.testingPollingIntervalMs || 60000
   if (testingTimer) clearInterval(testingTimer)
   testingTimer = setInterval(pollTesting, interval)
@@ -78,8 +82,12 @@ async function pollSending(): Promise<void> {
 }
 
 export function startSendingPolling(): void {
-  pollSending()
   const settings = getSettings()
+  if (!settings.sendingEnabled) {
+    console.log('[Polling:Sending] Skipped — sending disabled')
+    return
+  }
+  pollSending()
   const interval = settings.sendingPollingIntervalMs || 300000
   if (sendingTimer) clearInterval(sendingTimer)
   sendingTimer = setInterval(pollSending, interval)

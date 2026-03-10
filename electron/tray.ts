@@ -2,7 +2,7 @@ import { Tray, Menu, MenuItem, BrowserWindow, nativeImage, shell, app } from 'el
 import { join } from 'path'
 import { existsSync } from 'fs'
 import type { InboxSummary, SendingStreamSummary } from './api/types'
-import { isInboxVisibleInTray, getInboxSummariesCache } from './store'
+import { isInboxVisibleInTray, getInboxSummariesCache, getSettings } from './store'
 
 let tray: Tray | null = null
 let cachedInboxes: InboxSummary[] = []
@@ -123,107 +123,118 @@ export function updateTrayData(
   }
 }
 
+export function refreshTrayMenu(): void {
+  if (mainWindowRef) {
+    rebuildTrayMenu(mainWindowRef)
+  }
+}
+
 function rebuildTrayMenu(mainWindow: BrowserWindow): void {
   const menu = new Menu()
+  const settings = getSettings()
 
   // ── Sandboxes Section ──
-  menu.append(
-    new MenuItem({
-      label: 'Sandboxes',
-      enabled: false
-    })
-  )
-
-  menu.append(new MenuItem({ type: 'separator' }))
-
-  const visibleInboxes = cachedInboxes.filter((inbox) => isInboxVisibleInTray(inbox.id))
-
-  if (visibleInboxes.length === 0) {
+  if (settings.sandboxEnabled) {
     menu.append(
       new MenuItem({
-        label: '  No sandboxes found',
+        label: 'Sandboxes',
         enabled: false
       })
     )
-  } else {
-    // Group by project
-    const byProject: Record<string, typeof visibleInboxes> = {}
-    for (const inbox of visibleInboxes) {
-      const key = inbox.projectName
-      if (!byProject[key]) byProject[key] = []
-      byProject[key].push(inbox)
-    }
 
-    for (const [projectName, projectInboxes] of Object.entries(byProject)) {
+    menu.append(new MenuItem({ type: 'separator' }))
 
-      // Project name header
+    const visibleInboxes = cachedInboxes.filter((inbox) => isInboxVisibleInTray(inbox.id))
+
+    if (visibleInboxes.length === 0) {
       menu.append(
         new MenuItem({
-          label: `  ${projectName}`,
+          label: '  No sandboxes found',
           enabled: false
         })
       )
+    } else {
+      // Group by project
+      const byProject: Record<string, typeof visibleInboxes> = {}
+      for (const inbox of visibleInboxes) {
+        const key = inbox.projectName
+        if (!byProject[key]) byProject[key] = []
+        byProject[key].push(inbox)
+      }
 
-      // Indented inboxes — aligned columns
-      for (const inbox of projectInboxes) {
-        const nameWithCount = `${inbox.name} (${inbox.unreadCount}/${inbox.totalCount})`
-        const subject = inbox.lastEmailSubject ? `'${truncate(inbox.lastEmailSubject, 28)}'` : ''
-        const dateStr = inbox.lastEmailDate ? `(${inbox.lastEmailDate})` : ''
+      for (const [projectName, projectInboxes] of Object.entries(byProject)) {
+
+        // Project name header
+        menu.append(
+          new MenuItem({
+            label: `  ${projectName}`,
+            enabled: false
+          })
+        )
+
+        // Indented inboxes — aligned columns
+        for (const inbox of projectInboxes) {
+          const nameWithCount = `${inbox.name} (${inbox.unreadCount}/${inbox.totalCount})`
+          const subject = inbox.lastEmailSubject ? `'${truncate(inbox.lastEmailSubject, 28)}'` : ''
+          const dateStr = inbox.lastEmailDate ? `(${inbox.lastEmailDate})` : ''
+
+          menu.append(
+            new MenuItem({
+              label: `    ${nameWithCount}  ${subject}  ${dateStr}`.trimEnd(),
+              toolTip: inbox.lastEmailSubject || undefined,
+              click: () => {
+                focusAndNavigate(mainWindow, `sandbox/inbox/${inbox.id}`)
+              }
+            })
+          )
+        }
+
+      }
+    }
+
+    menu.append(new MenuItem({ type: 'separator' }))
+  }
+
+  // ── API/SMTP Section ──
+  if (settings.sendingEnabled) {
+    menu.append(
+      new MenuItem({
+        label: 'API/SMTP',
+        enabled: false
+      })
+    )
+
+    menu.append(new MenuItem({ type: 'separator' }))
+
+    if (cachedStreams.length === 0) {
+      menu.append(
+        new MenuItem({
+          label: '  No sending streams found',
+          enabled: false
+        })
+      )
+    } else {
+      const STREAM_NAME_COL = Math.max(20, ...cachedStreams.map((s) => s.name.length)) + 2
+      const STREAM_SENT_COL = 14
+
+      for (const stream of cachedStreams) {
+        const nameCol = stream.name.padEnd(STREAM_NAME_COL)
+        const sentCol = `${stream.sentCount.toLocaleString()} sent`.padEnd(STREAM_SENT_COL)
+        const rateCol = stream.deliveryRate != null ? `${stream.deliveryRate.toFixed(1)}% delivered` : ''
 
         menu.append(
           new MenuItem({
-            label: `    ${nameWithCount}  ${subject}  ${dateStr}`.trimEnd(),
-            toolTip: inbox.lastEmailSubject || undefined,
+            label: `  ${nameCol}${sentCol}${rateCol}`,
             click: () => {
-              focusAndNavigate(mainWindow, `sandbox/inbox/${inbox.id}`)
+              focusAndNavigate(mainWindow, `sending/${stream.id}`)
             }
           })
         )
       }
-
     }
+
+    menu.append(new MenuItem({ type: 'separator' }))
   }
-
-  menu.append(new MenuItem({ type: 'separator' }))
-
-  // ── API/SMTP Section ──
-  menu.append(
-    new MenuItem({
-      label: 'API/SMTP',
-      enabled: false
-    })
-  )
-
-  menu.append(new MenuItem({ type: 'separator' }))
-
-  if (cachedStreams.length === 0) {
-    menu.append(
-      new MenuItem({
-        label: '  No sending streams found',
-        enabled: false
-      })
-    )
-  } else {
-    const STREAM_NAME_COL = Math.max(20, ...cachedStreams.map((s) => s.name.length)) + 2
-    const STREAM_SENT_COL = 14
-
-    for (const stream of cachedStreams) {
-      const nameCol = stream.name.padEnd(STREAM_NAME_COL)
-      const sentCol = `${stream.sentCount.toLocaleString()} sent`.padEnd(STREAM_SENT_COL)
-      const rateCol = stream.deliveryRate != null ? `${stream.deliveryRate.toFixed(1)}% delivered` : ''
-
-      menu.append(
-        new MenuItem({
-          label: `  ${nameCol}${sentCol}${rateCol}`,
-          click: () => {
-            focusAndNavigate(mainWindow, `sending/${stream.id}`)
-          }
-        })
-      )
-    }
-  }
-
-  menu.append(new MenuItem({ type: 'separator' }))
 
   // ── Footer Section ──
   menu.append(

@@ -1,4 +1,4 @@
-import { ipcMain, app } from 'electron'
+import { ipcMain, app, BrowserWindow } from 'electron'
 import type { IpcMainInvokeEvent } from 'electron'
 import { initApiClients, destroyApiClients } from '../api/client'
 import {
@@ -46,7 +46,8 @@ import {
   getSettings,
   saveSettings
 } from '../store'
-import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling } from '../polling'
+import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
+import { refreshTrayMenu } from '../tray'
 import type { AppSettings } from '../api/types'
 
 /**
@@ -290,6 +291,26 @@ export function registerIpcHandlers(): void {
     }
     if (settings.sendingPollingIntervalMs !== undefined) {
       restartSendingPolling()
+    }
+    if (settings.sandboxEnabled !== undefined) {
+      if (settings.sandboxEnabled) {
+        restartTestingPolling()
+      } else {
+        stopTestingPolling()
+      }
+    }
+    if (settings.sendingEnabled !== undefined) {
+      if (settings.sendingEnabled) {
+        restartSendingPolling()
+      } else {
+        stopSendingPolling()
+      }
+    }
+    if (settings.sendingEnabled !== undefined || settings.sandboxEnabled !== undefined) {
+      refreshTrayMenu()
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send('navigate', '__settings_changed')
+      }
     }
     if (settings.launchAtStartup !== undefined) {
       app.setLoginItemSettings({ openAtLogin: settings.launchAtStartup })

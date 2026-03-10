@@ -7,6 +7,8 @@ interface AppSettings {
   sendingPollingIntervalMs: number
   launchAtStartup: boolean
   defaultView: 'sending' | 'testing'
+  sendingEnabled: boolean
+  sandboxEnabled: boolean
 }
 
 export default function Settings() {
@@ -24,6 +26,11 @@ export default function Settings() {
     value: AppSettings[K]
   ) => {
     if (!settings) return
+
+    // Prevent disabling both views
+    if (key === 'sendingEnabled' && value === false && !settings.sandboxEnabled) return
+    if (key === 'sandboxEnabled' && value === false && !settings.sendingEnabled) return
+
     const updated = { ...settings, [key]: value }
     setSettings(updated)
     setSaving(true)
@@ -52,91 +59,117 @@ export default function Settings() {
     )
   }
 
+  // Only show enabled views in the default view selector
+  const defaultViewOptions: { value: string; label: string }[] = []
+  if (settings.sandboxEnabled) defaultViewOptions.push({ value: 'testing', label: 'Sandboxes' })
+  if (settings.sendingEnabled) defaultViewOptions.push({ value: 'sending', label: 'API/SMTP' })
+
   return (
     <div className="mx-auto max-w-lg p-6">
       <h1 className="mb-8 text-heading-1 text-navy-air">Settings</h1>
 
       <div className="space-y-6">
-        {/* Sandboxes Polling */}
+        {/* Enabled Views */}
         <SettingRow
-          label="Sandboxes refresh"
-          description="How often to check for new test emails"
+          label="API/SMTP"
+          description="Show API/SMTP sending stats view"
         >
-          <select
-            value={settings.testingPollingIntervalMs}
-            onChange={(e) =>
-              updateSetting('testingPollingIntervalMs', Number(e.target.value))
-            }
-            className="input w-auto"
-          >
-            <option value={30000}>30 seconds</option>
-            <option value={60000}>1 minute</option>
-            <option value={180000}>3 minutes</option>
-            <option value={300000}>5 minutes</option>
-            <option value={600000}>10 minutes</option>
-          </select>
+          <ToggleSwitch
+            checked={settings.sendingEnabled}
+            disabled={settings.sendingEnabled && !settings.sandboxEnabled}
+            onChange={() => updateSetting('sendingEnabled', !settings.sendingEnabled)}
+          />
         </SettingRow>
+
+        <SettingRow
+          label="Sandboxes"
+          description="Show Sandboxes email testing view"
+        >
+          <ToggleSwitch
+            checked={settings.sandboxEnabled}
+            disabled={settings.sandboxEnabled && !settings.sendingEnabled}
+            onChange={() => updateSetting('sandboxEnabled', !settings.sandboxEnabled)}
+          />
+        </SettingRow>
+
+        {/* MTUI Separator */}
+        <div className="h-px w-full bg-grey-shade" />
+
+        {/* Sandboxes Polling */}
+        {settings.sandboxEnabled && (
+          <SettingRow
+            label="Sandboxes refresh"
+            description="How often to check for new test emails"
+          >
+            <select
+              value={settings.testingPollingIntervalMs}
+              onChange={(e) =>
+                updateSetting('testingPollingIntervalMs', Number(e.target.value))
+              }
+              className="input w-auto"
+            >
+              <option value={30000}>30 seconds</option>
+              <option value={60000}>1 minute</option>
+              <option value={180000}>3 minutes</option>
+              <option value={300000}>5 minutes</option>
+              <option value={600000}>10 minutes</option>
+            </select>
+          </SettingRow>
+        )}
 
         {/* API/SMTP Polling */}
-        <SettingRow
-          label="API/SMTP refresh"
-          description="How often to check for sending stats"
-        >
-          <select
-            value={settings.sendingPollingIntervalMs}
-            onChange={(e) =>
-              updateSetting('sendingPollingIntervalMs', Number(e.target.value))
-            }
-            className="input w-auto"
+        {settings.sendingEnabled && (
+          <SettingRow
+            label="API/SMTP refresh"
+            description="How often to check for sending stats"
           >
-            <option value={60000}>1 minute</option>
-            <option value={300000}>5 minutes</option>
-            <option value={600000}>10 minutes</option>
-            <option value={1800000}>30 minutes</option>
-          </select>
-        </SettingRow>
+            <select
+              value={settings.sendingPollingIntervalMs}
+              onChange={(e) =>
+                updateSetting('sendingPollingIntervalMs', Number(e.target.value))
+              }
+              className="input w-auto"
+            >
+              <option value={60000}>1 minute</option>
+              <option value={300000}>5 minutes</option>
+              <option value={600000}>10 minutes</option>
+              <option value={1800000}>30 minutes</option>
+            </select>
+          </SettingRow>
+        )}
 
         {/* Default View */}
-        <SettingRow
-          label="Default View"
-          description="Which section to show when the app opens"
-        >
-          <select
-            value={settings.defaultView}
-            onChange={(e) =>
-              updateSetting(
-                'defaultView',
-                e.target.value as AppSettings['defaultView']
-              )
-            }
-            className="input w-auto"
+        {defaultViewOptions.length > 1 && (
+          <SettingRow
+            label="Default View"
+            description="Which section to show when the app opens"
           >
-            <option value="testing">Sandboxes</option>
-            <option value="sending">API/SMTP</option>
-          </select>
-        </SettingRow>
+            <select
+              value={settings.defaultView}
+              onChange={(e) =>
+                updateSetting(
+                  'defaultView',
+                  e.target.value as AppSettings['defaultView']
+                )
+              }
+              className="input w-auto"
+            >
+              {defaultViewOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </SettingRow>
+        )}
 
         {/* Launch at Startup */}
         <SettingRow
           label="Launch at Startup"
           description="Automatically start Mailtrap when you log in"
         >
-          <button
-            onClick={() =>
-              updateSetting('launchAtStartup', !settings.launchAtStartup)
-            }
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-mtui ease-mtui ${
-              settings.launchAtStartup
-                ? 'bg-blue-neutral'
-                : 'bg-grey-dark'
-            }`}
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-mtui-box transition-transform ${
-                settings.launchAtStartup ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
+          <ToggleSwitch
+            checked={settings.launchAtStartup}
+            onChange={() => updateSetting('launchAtStartup', !settings.launchAtStartup)}
+          />
         </SettingRow>
 
         {/* MTUI Separator — horizontal, border.light (dark) */}
@@ -170,6 +203,34 @@ export default function Settings() {
         </p>
       )}
     </div>
+  )
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+  disabled = false
+}: {
+  checked: boolean
+  onChange: () => void
+  disabled?: boolean
+}) {
+  return (
+    <button
+      onClick={onChange}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-mtui ease-mtui ${
+        checked
+          ? 'bg-blue-neutral'
+          : 'bg-grey-dark'
+      } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-mtui-box transition-transform ${
+          checked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
   )
 }
 

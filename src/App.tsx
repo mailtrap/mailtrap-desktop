@@ -15,12 +15,37 @@ function AuthenticatedApp() {
   useTrayNavigation()
 
   const [defaultRoute, setDefaultRoute] = useState<string | null>(null)
+  const [sendingEnabled, setSendingEnabled] = useState(true)
+  const [sandboxEnabled, setSandboxEnabled] = useState(true)
 
   useEffect(() => {
-    window.electron.getSettings().then((s) => {
-      const view = s?.defaultView === 'sending' ? '/sending' : '/sandbox'
+    const loadSettings = (s: { defaultView?: string; sendingEnabled?: boolean; sandboxEnabled?: boolean }) => {
+      const sEnabled = s?.sendingEnabled !== false
+      const tEnabled = s?.sandboxEnabled !== false
+      setSendingEnabled(sEnabled)
+      setSandboxEnabled(tEnabled)
+
+      let view: string
+      if (s?.defaultView === 'sending' && sEnabled) {
+        view = '/sending'
+      } else if (tEnabled) {
+        view = '/sandbox'
+      } else if (sEnabled) {
+        view = '/sending'
+      } else {
+        view = '/settings'
+      }
       setDefaultRoute(view)
+    }
+
+    window.electron.getSettings().then(loadSettings)
+
+    const cleanup = window.electron.onNavigate((route) => {
+      if (route === '__settings_changed') {
+        window.electron.getSettings().then(loadSettings)
+      }
     })
+    return cleanup
   }, [])
 
   if (!defaultRoute) return null
@@ -30,10 +55,10 @@ function AuthenticatedApp() {
       <Sidebar />
       <main className="flex-1 overflow-auto bg-navy-700">
         <Routes>
-          <Route path="/sending" element={<SendingDash />} />
-          <Route path="/sending/:domainId" element={<SendingDash />} />
-          <Route path="/sandbox" element={<InboxList />} />
-          <Route path="/sandbox/inbox/:inboxId" element={<InboxView />} />
+          {sendingEnabled && <Route path="/sending" element={<SendingDash />} />}
+          {sendingEnabled && <Route path="/sending/:domainId" element={<SendingDash />} />}
+          {sandboxEnabled && <Route path="/sandbox" element={<InboxList />} />}
+          {sandboxEnabled && <Route path="/sandbox/inbox/:inboxId" element={<InboxView />} />}
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={defaultRoute} replace />} />
         </Routes>

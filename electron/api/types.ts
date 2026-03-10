@@ -230,6 +230,8 @@ export interface AppSettings {
   launchAtStartup: boolean
   theme: 'system' | 'light' | 'dark'
   defaultView: 'sending' | 'testing'
+  sendingEnabled: boolean
+  sandboxEnabled: boolean
 }
 
 export interface StatsRow {
@@ -268,5 +270,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sendingPollingIntervalMs: 300000,   // 5 minutes
   launchAtStartup: false,
   theme: 'system',
-  defaultView: 'testing'
+  defaultView: 'testing',
+  sendingEnabled: true,
+  sandboxEnabled: true,
 }

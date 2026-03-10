@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
 function MailtrapLogo() {
@@ -35,16 +36,25 @@ function SettingsIcon() {
   )
 }
 
-const navItems = [
+interface NavItem {
+  label: string
+  to: string
+  icon: React.ReactNode
+  settingsKey?: 'sendingEnabled' | 'sandboxEnabled'
+}
+
+const allNavItems: NavItem[] = [
   {
     label: 'API/SMTP',
     to: '/sending',
-    icon: <SendingIcon />
+    icon: <SendingIcon />,
+    settingsKey: 'sendingEnabled'
   },
   {
     label: 'Sandboxes',
     to: '/sandbox',
-    icon: <SandboxesIcon />
+    icon: <SandboxesIcon />,
+    settingsKey: 'sandboxEnabled'
   },
   {
     label: 'Settings',
@@ -54,6 +64,33 @@ const navItems = [
 ]
 
 export default function Sidebar() {
+  const [navItems, setNavItems] = useState<NavItem[]>([])
+
+  useEffect(() => {
+    window.electron.getSettings().then((s) => {
+      setNavItems(
+        allNavItems.filter((item) => {
+          if (!item.settingsKey) return true
+          return s[item.settingsKey] !== false
+        })
+      )
+    })
+
+    const cleanup = window.electron.onNavigate((route) => {
+      if (route === '__settings_changed') {
+        window.electron.getSettings().then((s) => {
+          setNavItems(
+            allNavItems.filter((item) => {
+              if (!item.settingsKey) return true
+              return s[item.settingsKey] !== false
+            })
+          )
+        })
+      }
+    })
+    return cleanup
+  }, [])
+
   return (
     <aside className="flex w-52 shrink-0 flex-col border-r border-grey-shade bg-navy-void">
       {/* Spacer for title bar drag area */}

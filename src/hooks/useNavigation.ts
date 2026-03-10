@@ -10,6 +10,7 @@ export function useTrayNavigation(): void {
 
   useEffect(() => {
     const unsubscribe = window.electron.onNavigate((route: string) => {
+      if (route.startsWith('__')) return
       navigate(`/${route}`)
     })
     return unsubscribe
