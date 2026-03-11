@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios'
 // The Mailtrap SDK uses https://mailtrap.io as the GENERAL_ENDPOINT
 // for all account/project/inbox/message operations.
 // Stats endpoints also live here.
-const GENERAL_BASE_URL = 'https://mailtrap.io'
+export const GENERAL_BASE_URL = 'https://mailtrap.io'
 
 let apiClient: AxiosInstance | null = null
 

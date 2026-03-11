@@ -1,6 +1,7 @@
 import { ipcMain, app, BrowserWindow } from 'electron'
 import type { IpcMainInvokeEvent } from 'electron'
-import { initApiClients, destroyApiClients } from '../api/client'
+import axios from 'axios'
+import { initApiClients, destroyApiClients, GENERAL_BASE_URL } from '../api/client'
 import {
   getAccounts,
   getProjects,
@@ -56,7 +57,7 @@ import {
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
 import { refreshTrayMenu } from '../tray'
 import { randomUUID } from 'crypto'
-import type { AppSettings, SenderProfile, AddSenderResult, SelectSenderResult, DeleteSenderResult, RestoreAuthResult, SenderProfilePublic } from '../api/types'
+import type { Account, AppSettings, SenderProfile, AddSenderResult, SelectSenderResult, DeleteSenderResult, RestoreAuthResult, SenderProfilePublic } from '../api/types'
 
 /**
  * Wraps an IPC handler that requires authentication.
@@ -156,13 +157,16 @@ export function registerIpcHandlers(): void {
     }
 
     try {
-      destroyApiClients()
-      clearAllCaches()
-      initApiClients(token)
+      // Validate the token using a temporary client to avoid destroying the active session
+      const tempClient = axios.create({
+        baseURL: GENERAL_BASE_URL,
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 15000,
+      })
+      const response = await tempClient.get<Account[]>('/api/accounts')
+      const accounts = response.data
 
-      const accounts = await getAccounts()
       if (accounts.length === 0) {
-        destroyApiClients()
         return { success: false, error: 'No accounts found for this API token' }
       }
 
@@ -171,7 +175,6 @@ export function registerIpcHandlers(): void {
       // Check for duplicate accountId
       const existing = listSenders()
       if (existing.some(s => s.accountId === account.id)) {
-        destroyApiClients()
         return { success: false, error: `Account "${account.name}" is already added` }
       }
 
@@ -184,13 +187,16 @@ export function registerIpcHandlers(): void {
         createdAt: new Date().toISOString(),
       }
 
+      // Only now switch the active session
+      destroyApiClients()
+      clearAllCaches()
+      initApiClients(token)
       saveSender(profile)
       setLastActiveSenderId(profile.id)
       startPolling()
 
       return { success: true, senderId: profile.id, accountId: account.id, accountName: account.name }
     } catch (error: unknown) {
-      destroyApiClients()
       const message = error instanceof Error ? error.message : 'Failed to add sender'
       return { success: false, error: message }
     }
