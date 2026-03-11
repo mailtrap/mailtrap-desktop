@@ -2,7 +2,7 @@ import { safeStorage } from 'electron'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
-import type { AppSettings } from './api/types'
+import type { AppSettings, SenderProfile } from './api/types'
 import { DEFAULT_SETTINGS } from './api/types'
 
 function getStorePath(): string {
@@ -24,9 +24,16 @@ interface CachedWithTimestamp<T = unknown> {
 }
 
 interface StoreData {
+  /** @deprecated Use senders[] instead */
   encryptedToken?: string
+  /** @deprecated Use senders[] instead */
   accountId?: number
+  /** @deprecated Use senders[] instead */
   accountName?: string
+  /** Sender profiles (multi-sender support) */
+  senders?: SenderProfile[]
+  /** ID of the last active sender profile */
+  lastActiveSenderId?: string
   /** Inbox IDs hidden from the tray menu (default: all visible) */
   hiddenTrayInboxIds?: number[]
   /** Cached sending stats keyed by "domainId_timeRange" */
