@@ -57,7 +57,7 @@ import {
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
 import { refreshTrayMenu } from '../tray'
 import { randomUUID } from 'crypto'
-import type { AppSettings, SenderProfile, AddSenderResult, SelectSenderResult, DeleteSenderResult, SenderProfilePublic } from '../api/types'
+import type { AppSettings, SenderProfile, AddSenderResult, SelectSenderResult, DeleteSenderResult, RestoreAuthResult, SenderProfilePublic } from '../api/types'
 
 /**
  * Wraps an IPC handler that requires authentication.
@@ -106,16 +106,34 @@ export function registerIpcHandlers(): void {
     return { success: true }
   })
 
-  ipcMain.handle('auth:restore', () => {
-    const token = getToken()
-    const accountId = getAccountId()
-    const accountName = getAccountName()
-    if (token && accountId) {
-      initApiClients(token)
-      startPolling()
-      return { authenticated: true, accountId, accountName }
+  ipcMain.handle('auth:restore', (): RestoreAuthResult => {
+    // readStore() triggers migrateIfNeeded() if needed
+    const senderId = getLastActiveSenderId()
+    if (!senderId) {
+      return { authenticated: false }
     }
-    return { authenticated: false }
+
+    const profile = getSenderById(senderId)
+    if (!profile) {
+      return { authenticated: false }
+    }
+
+    const token = decryptToken(profile.encryptedToken)
+    if (!token) {
+      return { authenticated: false }
+    }
+
+    initApiClients(token)
+    saveAccountId(profile.accountId)
+    saveAccountName(profile.accountName)
+    startPolling()
+    return {
+      authenticated: true,
+      accountId: profile.accountId,
+      accountName: profile.accountName,
+      senderId: profile.id,
+      senderDisplayName: profile.displayName,
+    }
   })
 
   // ── Sender Profiles ──
