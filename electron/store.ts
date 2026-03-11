@@ -192,6 +192,17 @@ export function getAccountName(): string | null {
   return store.accountName ?? null
 }
 
+/**
+ * Clears the deprecated root-level accountId and accountName fields.
+ * Call on logout to prevent stale values from lingering.
+ */
+export function clearActiveAccount(): void {
+  const store = readStore()
+  delete store.accountId
+  delete store.accountName
+  writeStore(store)
+}
+
 // ── Tray Visibility ──
 
 export function getHiddenTrayInboxIds(): number[] {
