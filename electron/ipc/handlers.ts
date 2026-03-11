@@ -27,9 +27,7 @@ import {
   getToken,
   deleteToken,
   saveAccountId,
-  getAccountId,
   saveAccountName,
-  getAccountName,
   getHiddenTrayInboxIds,
   setInboxTrayVisibility,
   setMultipleInboxTrayVisibility,
@@ -61,15 +59,17 @@ import type { AppSettings, SenderProfile, AddSenderResult, SelectSenderResult, D
 
 /**
  * Wraps an IPC handler that requires authentication.
- * Automatically resolves the accountId and throws if not authenticated.
+ * Resolves the accountId from the active sender profile and throws if not authenticated.
  */
 function withAuth<TArgs extends unknown[], TReturn>(
   handler: (accountId: number, ...args: TArgs) => Promise<TReturn> | TReturn
 ) {
   return async (_event: IpcMainInvokeEvent, ...args: TArgs): Promise<TReturn> => {
-    const accountId = getAccountId()
-    if (!accountId) throw new Error('Not authenticated')
-    return handler(accountId, ...args)
+    const activeSenderId = getLastActiveSenderId()
+    if (!activeSenderId) throw new Error('Not authenticated')
+    const sender = getSenderById(activeSenderId)
+    if (!sender) throw new Error('Active sender profile not found')
+    return handler(sender.accountId, ...args)
   }
 }
 
@@ -124,8 +124,6 @@ export function registerIpcHandlers(): void {
     }
 
     initApiClients(token)
-    saveAccountId(profile.accountId)
-    saveAccountName(profile.accountName)
     startPolling()
     return {
       authenticated: true,
@@ -185,8 +183,6 @@ export function registerIpcHandlers(): void {
 
       saveSender(profile)
       setLastActiveSenderId(profile.id)
-      saveAccountId(account.id)
-      saveAccountName(account.name)
       startPolling()
 
       return { success: true, senderId: profile.id, accountId: account.id, accountName: account.name }
@@ -219,8 +215,6 @@ export function registerIpcHandlers(): void {
       }
 
       setLastActiveSenderId(senderId)
-      saveAccountId(profile.accountId)
-      saveAccountName(profile.accountName)
       startPolling()
 
       return { success: true, senderId: profile.id, accountId: profile.accountId, accountName: profile.accountName }
