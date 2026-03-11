@@ -2,7 +2,7 @@ import { Tray, Menu, MenuItem, BrowserWindow, nativeImage, shell, app } from 'el
 import { join } from 'path'
 import { existsSync } from 'fs'
 import type { InboxSummary, SendingStreamSummary } from './api/types'
-import { isInboxVisibleInTray, getInboxSummariesCache, getSettings } from './store'
+import { isInboxVisibleInTray, getInboxSummariesCache, getSettings, getActiveSenderDisplayName } from './store'
 
 let tray: Tray | null = null
 let cachedInboxes: InboxSummary[] = []
@@ -132,6 +132,13 @@ export function refreshTrayMenu(): void {
 function rebuildTrayMenu(mainWindow: BrowserWindow): void {
   const menu = new Menu()
   const settings = getSettings()
+
+  // ── Connected Sender Label ──
+  const senderDisplayName = getActiveSenderDisplayName()
+  if (senderDisplayName) {
+    menu.append(new MenuItem({ label: `Connected as: ${senderDisplayName}`, enabled: false }))
+    menu.append(new MenuItem({ type: 'separator' }))
+  }
 
   // ── Sandboxes Section ──
   if (settings.sandboxEnabled) {
