@@ -2,6 +2,7 @@ import { safeStorage } from 'electron'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
+import { randomUUID } from 'crypto'
 import type { AppSettings, SenderProfile } from './api/types'
 import { DEFAULT_SETTINGS } from './api/types'
 
@@ -51,6 +52,30 @@ interface StoreData {
 
 let storeCache: StoreData | null = null
 
+/**
+ * Migrates legacy single-token store data to the multi-sender format.
+ * Idempotent: does nothing if senders[] already has entries.
+ */
+function migrateIfNeeded(store: StoreData): StoreData {
+  if (store.encryptedToken && (!store.senders || store.senders.length === 0)) {
+    const profile: SenderProfile = {
+      id: randomUUID(),
+      displayName: store.accountName ?? `Account ${store.accountId ?? 'unknown'}`,
+      encryptedToken: store.encryptedToken,
+      accountId: store.accountId ?? 0,
+      accountName: store.accountName ?? '',
+      createdAt: new Date().toISOString(),
+    }
+    store.senders = [profile]
+    store.lastActiveSenderId = profile.id
+    delete store.encryptedToken
+    delete store.accountId
+    delete store.accountName
+    writeStore(store)
+  }
+  return store
+}
+
 function readStore(): StoreData {
   if (storeCache) return storeCache
 
@@ -62,6 +87,7 @@ function readStore(): StoreData {
   try {
     const raw = readFileSync(storePath, 'utf-8')
     storeCache = JSON.parse(raw) as StoreData
+    storeCache = migrateIfNeeded(storeCache)
     return storeCache
   } catch {
     storeCache = { settings: { ...DEFAULT_SETTINGS } }
