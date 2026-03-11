@@ -179,6 +179,40 @@ export function registerIpcHandlers(): void {
     }
   })
 
+  ipcMain.handle('auth:select-sender', async (_event, senderId: string): Promise<SelectSenderResult> => {
+    const profile = getSenderById(senderId)
+    if (!profile) {
+      return { success: false, error: 'Sender profile not found' }
+    }
+
+    const token = decryptToken(profile.encryptedToken)
+    if (!token) {
+      return { success: false, error: 'Failed to decrypt sender token' }
+    }
+
+    try {
+      destroyApiClients()
+      initApiClients(token)
+
+      const accounts = await getAccounts()
+      if (accounts.length === 0) {
+        destroyApiClients()
+        return { success: false, error: 'Token is no longer valid' }
+      }
+
+      setLastActiveSenderId(senderId)
+      saveAccountId(profile.accountId)
+      saveAccountName(profile.accountName)
+      startPolling()
+
+      return { success: true, senderId: profile.id, accountId: profile.accountId, accountName: profile.accountName }
+    } catch (error: unknown) {
+      destroyApiClients()
+      const message = error instanceof Error ? error.message : 'Failed to select sender'
+      return { success: false, error: message }
+    }
+  })
+
   // ── Sandbox ──
 
   ipcMain.handle('sandbox:get-projects', withAuth(
