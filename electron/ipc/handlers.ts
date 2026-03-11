@@ -213,6 +213,24 @@ export function registerIpcHandlers(): void {
     }
   })
 
+  ipcMain.handle('auth:delete-sender', async (_event, senderId: string): Promise<DeleteSenderResult> => {
+    const profile = getSenderById(senderId)
+    if (!profile) {
+      return { success: false, error: 'Sender profile not found' }
+    }
+
+    const wasActive = getLastActiveSenderId() === senderId
+    if (wasActive) {
+      stopPolling()
+      destroyApiClients()
+      setLastActiveSenderId(null)
+    }
+
+    deleteSenderFromStore(senderId)
+
+    return { success: true, wasActive }
+  })
+
   // ── Sandbox ──
 
   ipcMain.handle('sandbox:get-projects', withAuth(
