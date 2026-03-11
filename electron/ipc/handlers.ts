@@ -125,6 +125,60 @@ export function registerIpcHandlers(): void {
     return profiles.map(({ encryptedToken, ...rest }) => rest)
   })
 
+  ipcMain.handle('auth:add-sender', async (_event, displayName: string, token: string): Promise<AddSenderResult> => {
+    // Validate inputs
+    if (!displayName || displayName.trim().length === 0) {
+      return { success: false, error: 'Display name is required' }
+    }
+    if (displayName.length > 80) {
+      return { success: false, error: 'Display name must be 80 characters or fewer' }
+    }
+    if (!token || token.trim().length === 0) {
+      return { success: false, error: 'API token is required' }
+    }
+
+    try {
+      destroyApiClients()
+      initApiClients(token)
+
+      const accounts = await getAccounts()
+      if (accounts.length === 0) {
+        destroyApiClients()
+        return { success: false, error: 'No accounts found for this API token' }
+      }
+
+      const account = accounts[0]
+
+      // Check for duplicate accountId
+      const existing = listSenders()
+      if (existing.some(s => s.accountId === account.id)) {
+        destroyApiClients()
+        return { success: false, error: `Account "${account.name}" is already added` }
+      }
+
+      const profile: SenderProfile = {
+        id: randomUUID(),
+        displayName: displayName.trim(),
+        encryptedToken: encryptToken(token),
+        accountId: account.id,
+        accountName: account.name,
+        createdAt: new Date().toISOString(),
+      }
+
+      saveSender(profile)
+      setLastActiveSenderId(profile.id)
+      saveAccountId(account.id)
+      saveAccountName(account.name)
+      startPolling()
+
+      return { success: true, senderId: profile.id, accountId: account.id, accountName: account.name }
+    } catch (error: unknown) {
+      destroyApiClients()
+      const message = error instanceof Error ? error.message : 'Failed to add sender'
+      return { success: false, error: message }
+    }
+  })
+
   // ── Sandbox ──
 
   ipcMain.handle('sandbox:get-projects', withAuth(
