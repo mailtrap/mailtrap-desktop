@@ -75,6 +75,12 @@ export default function App() {
   const [authView, setAuthView] = useState<'list' | 'add'>('list')
 
   useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      setAuthView('list')
+    }
+  }, [isAuthenticated, isLoading])
+
+  useEffect(() => {
     window.electron.restoreAuth().then((result) => {
       if (result.authenticated) {
         setAuthenticated(result.accountId, result.accountName, result.senderId, result.senderDisplayName)
