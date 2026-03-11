@@ -83,34 +83,41 @@ export function clearStoreCache(): void {
   storeCache = null
 }
 
+// ── Encryption Helpers ──
+
+export function encryptToken(token: string): string {
+  if (safeStorage.isEncryptionAvailable()) {
+    const encrypted = safeStorage.encryptString(token)
+    return encrypted.toString('base64')
+  }
+  // Fallback: store as base64 (not truly secure, but works on all platforms)
+  return Buffer.from(token).toString('base64')
+}
+
+export function decryptToken(encrypted: string): string | null {
+  try {
+    if (safeStorage.isEncryptionAvailable()) {
+      const buffer = Buffer.from(encrypted, 'base64')
+      return safeStorage.decryptString(buffer)
+    }
+    return Buffer.from(encrypted, 'base64').toString('utf-8')
+  } catch {
+    return null
+  }
+}
+
 // ── Token Management ──
 
 export function saveToken(token: string): void {
   const store = readStore()
-  if (safeStorage.isEncryptionAvailable()) {
-    const encrypted = safeStorage.encryptString(token)
-    store.encryptedToken = encrypted.toString('base64')
-  } else {
-    // Fallback: store as base64 (not truly secure, but works on all platforms)
-    store.encryptedToken = Buffer.from(token).toString('base64')
-  }
+  store.encryptedToken = encryptToken(token)
   writeStore(store)
 }
 
 export function getToken(): string | null {
   const store = readStore()
   if (!store.encryptedToken) return null
-
-  try {
-    if (safeStorage.isEncryptionAvailable()) {
-      const buffer = Buffer.from(store.encryptedToken, 'base64')
-      return safeStorage.decryptString(buffer)
-    } else {
-      return Buffer.from(store.encryptedToken, 'base64').toString('utf-8')
-    }
-  } catch {
-    return null
-  }
+  return decryptToken(store.encryptedToken)
 }
 
 export function deleteToken(): void {
@@ -282,4 +289,52 @@ export function saveEmailCache(inboxId: number, messageId: number, data: unknown
 export function getEmailCache(inboxId: number, messageId: number): CachedWithTimestamp | null {
   const store = readStore()
   return store.emailCache?.[`${inboxId}_${messageId}`] ?? null
+}
+
+// ── Sender Profile Management ──
+
+export function listSenders(): SenderProfile[] {
+  const store = readStore()
+  return store.senders ?? []
+}
+
+export function saveSender(profile: SenderProfile): void {
+  const store = readStore()
+  if (!store.senders) store.senders = []
+  store.senders.push(profile)
+  writeStore(store)
+}
+
+export function deleteSender(id: string): void {
+  const store = readStore()
+  store.senders = (store.senders ?? []).filter(s => s.id !== id)
+  writeStore(store)
+}
+
+export function getSenderById(id: string): SenderProfile | null {
+  const store = readStore()
+  return (store.senders ?? []).find(s => s.id === id) ?? null
+}
+
+export function getLastActiveSenderId(): string | null {
+  const store = readStore()
+  return store.lastActiveSenderId ?? null
+}
+
+export function setLastActiveSenderId(id: string | null): void {
+  const store = readStore()
+  if (id === null) {
+    delete store.lastActiveSenderId
+  } else {
+    store.lastActiveSenderId = id
+  }
+  writeStore(store)
+}
+
+export function getActiveSenderDisplayName(): string | null {
+  const store = readStore()
+  const activeId = store.lastActiveSenderId
+  if (!activeId) return null
+  const sender = (store.senders ?? []).find(s => s.id === activeId)
+  return sender?.displayName ?? null
 }
