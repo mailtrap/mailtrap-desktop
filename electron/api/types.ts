@@ -222,6 +222,35 @@ export interface SendingStreamSummary {
   deliveryRate: number | null
 }
 
+// ── Sender Profiles ──
+
+export interface SenderProfile {
+  id: string
+  displayName: string
+  encryptedToken: string
+  accountId: number
+  accountName: string
+  createdAt: string
+}
+
+export type SenderProfilePublic = Omit<SenderProfile, 'encryptedToken'>
+
+export type AddSenderResult =
+  | { success: true; senderId: string; accountId: number; accountName: string }
+  | { success: false; error: string }
+
+export type SelectSenderResult =
+  | { success: true; senderId: string; accountId: number; accountName: string }
+  | { success: false; error: string }
+
+export type DeleteSenderResult =
+  | { success: true; wasActive: boolean }
+  | { success: false; error: string }
+
+export type RestoreAuthResult =
+  | { authenticated: true; accountId: number; accountName?: string; senderId: string; senderDisplayName: string }
+  | { authenticated: false }
+
 // ── Settings ──
 
 export interface AppSettings {
