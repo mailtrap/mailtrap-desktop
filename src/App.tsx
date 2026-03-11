@@ -5,7 +5,8 @@ import { useTrayNavigation } from './hooks/useNavigation'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
 import TitleBar from './components/layout/TitleBar'
-import TokenSetup from './components/auth/TokenSetup'
+import SenderList from './components/auth/SenderList'
+import AddSender from './components/auth/AddSender'
 import SendingDash from './components/sending/SendingDash'
 import InboxList from './components/sandbox/InboxList'
 import InboxView from './components/sandbox/InboxView'
@@ -71,10 +72,12 @@ export default function App() {
   const { isAuthenticated, isLoading, setAuthenticated, setUnauthenticated } =
     useAppStore()
 
+  const [authView, setAuthView] = useState<'list' | 'add'>('list')
+
   useEffect(() => {
     window.electron.restoreAuth().then((result) => {
-      if (result.authenticated && result.accountId) {
-        setAuthenticated(result.accountId, result.accountName)
+      if (result.authenticated) {
+        setAuthenticated(result.accountId, result.accountName, result.senderId, result.senderDisplayName)
       } else {
         setUnauthenticated()
       }
@@ -99,10 +102,15 @@ export default function App() {
         <ErrorBoundary>
           {isAuthenticated ? (
             <AuthenticatedApp />
+          ) : authView === 'add' ? (
+            <AddSender
+              onBack={() => setAuthView('list')}
+              onSuccess={(accountId, accountName, senderId, displayName) => {
+                setAuthenticated(accountId, accountName, senderId, displayName)
+              }}
+            />
           ) : (
-            <Routes>
-              <Route path="*" element={<TokenSetup />} />
-            </Routes>
+            <SenderList onAddSender={() => setAuthView('add')} />
           )}
         </ErrorBoundary>
       </div>
