@@ -79,7 +79,7 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Work, Personal, Client A"
               className="input"
-              maxLength={50}
+              maxLength={80}
               disabled={loading}
               autoFocus
             />
