@@ -101,8 +101,8 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('auth:logout', () => {
     stopPolling()
-    deleteToken()
     destroyApiClients()
+    setLastActiveSenderId(null)
     return { success: true }
   })
 
