@@ -44,11 +44,20 @@ import {
   saveEmailCache,
   getEmailCache,
   getSettings,
-  saveSettings
+  saveSettings,
+  listSenders,
+  saveSender,
+  deleteSender as deleteSenderFromStore,
+  getSenderById,
+  getLastActiveSenderId,
+  setLastActiveSenderId,
+  encryptToken,
+  decryptToken,
 } from '../store'
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
 import { refreshTrayMenu } from '../tray'
-import type { AppSettings } from '../api/types'
+import { randomUUID } from 'crypto'
+import type { AppSettings, SenderProfile, AddSenderResult, SelectSenderResult, DeleteSenderResult, SenderProfilePublic } from '../api/types'
 
 /**
  * Wraps an IPC handler that requires authentication.
@@ -107,6 +116,13 @@ export function registerIpcHandlers(): void {
       return { authenticated: true, accountId, accountName }
     }
     return { authenticated: false }
+  })
+
+  // ── Sender Profiles ──
+
+  ipcMain.handle('auth:list-senders', async (): Promise<SenderProfilePublic[]> => {
+    const profiles = listSenders()
+    return profiles.map(({ encryptedToken, ...rest }) => rest)
   })
 
   // ── Sandbox ──
