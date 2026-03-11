@@ -23,7 +23,6 @@ import type {
 export interface ElectronAPI {
   // Auth
   hasToken: () => Promise<boolean>
-  login: (token: string) => Promise<{ success: boolean; accountId?: number; accountName?: string; error?: string }>
   logout: () => Promise<{ success: boolean }>
   restoreAuth: () => Promise<RestoreAuthResult>
 
@@ -88,7 +87,6 @@ export interface ElectronAPI {
 const api: ElectronAPI = {
   // Auth
   hasToken: () => ipcRenderer.invoke('auth:get-token'),
-  login: (token) => ipcRenderer.invoke('auth:login', token),
   logout: () => ipcRenderer.invoke('auth:logout'),
   restoreAuth: () => ipcRenderer.invoke('auth:restore'),
 

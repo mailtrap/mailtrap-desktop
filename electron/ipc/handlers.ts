@@ -81,6 +81,7 @@ export function registerIpcHandlers(): void {
     return getToken() !== null
   })
 
+  /** @deprecated Kept for backward compatibility; no longer exposed via preload bridge. */
   ipcMain.handle('auth:login', async (_event, token: string) => {
     initApiClients(token)
     try {
