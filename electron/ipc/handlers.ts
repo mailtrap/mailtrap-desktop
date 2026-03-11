@@ -51,6 +51,7 @@ import {
   setLastActiveSenderId,
   encryptToken,
   decryptToken,
+  clearAllCaches,
 } from '../store'
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
 import { refreshTrayMenu } from '../tray'
@@ -155,6 +156,7 @@ export function registerIpcHandlers(): void {
 
     try {
       destroyApiClients()
+      clearAllCaches()
       initApiClients(token)
 
       const accounts = await getAccounts()
@@ -206,6 +208,7 @@ export function registerIpcHandlers(): void {
 
     try {
       destroyApiClients()
+      clearAllCaches()
       initApiClients(token)
 
       const accounts = await getAccounts()

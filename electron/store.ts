@@ -109,6 +109,20 @@ export function clearStoreCache(): void {
   storeCache = null
 }
 
+/**
+ * Clears all cached API data from persistent storage.
+ * Call when switching senders to prevent stale data from a previous sender being visible.
+ */
+export function clearAllCaches(): void {
+  const store = readStore()
+  delete store.sendingStatsCache
+  delete store.inboxSummariesCache
+  delete store.messagesCache
+  delete store.emailCache
+  delete store.sendingDomainsCache
+  writeStore(store)
+}
+
 // ── Encryption Helpers ──
 
 export function encryptToken(token: string): string {
