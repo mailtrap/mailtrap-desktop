@@ -53,6 +53,7 @@ import {
   encryptToken,
   decryptToken,
   clearAllCaches,
+  clearActiveAccount,
 } from '../store'
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
 import { refreshTrayMenu } from '../tray'
@@ -106,6 +107,8 @@ export function registerIpcHandlers(): void {
     stopPolling()
     destroyApiClients()
     setLastActiveSenderId(null)
+    clearActiveAccount()
+    clearAllCaches()
     return { success: true }
   })
 
