@@ -200,7 +200,7 @@
 
 **Expected result:**
 - Sender List screen is shown.
-- The row for `"id-A"` displays the error message "Session expired. Click Connect to log in again.".
+- The row for `"id-A"` displays the error message "Session expired. Click Connect to log in again".
 - The Connect button is available (not disabled).
 
 ---

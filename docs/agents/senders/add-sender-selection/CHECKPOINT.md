@@ -66,7 +66,7 @@ All code review and performance review comments resolved.
 
 ## Key Dependencies
 
-```
+```text
 US-14 (types) → US-01 (store) → US-02-08 (IPC) → US-09-13 (renderer) → US-15 (QA)
 US-12 (appStore senderId) → TitleBar update
 ```

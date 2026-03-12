@@ -215,11 +215,11 @@
 
 ---
 
-## TC-02-09 — Long accountName (>80 chars) is truncated during migration
+## TC-02-09 — Long accountName (>80 chars) is preserved during migration
 
 **Priority:** P2
 
-**Description:** Verify that a legacy accountName exceeding 80 characters does not cause a validation failure or data loss; the displayName is stored as-is or truncated per the migration logic.
+**Description:** Verify that a legacy accountName exceeding 80 characters does not cause a validation failure or data loss. Migration stores the full accountName as-is — the 80-char limit only applies to user-entered names in the Add Sender form, not to migrated data.
 
 **Preconditions:**
 - Legacy store with `accountName` of 100 characters.
@@ -231,15 +231,15 @@
 **Expected result:**
 - Migration completes without throwing.
 - A profile is created.
-- The migration stores the full `accountName` (no truncation during migration — truncation is a form-level rule for user-entered names, not migration). Note: if the implementation chooses to truncate, the profile `displayName` should be 80 chars maximum; document the actual behavior here.
+- `profile.displayName` is the full 100-character `accountName` (no truncation during migration).
 
 ---
 
-## TC-02-10 — Store with only empty senders array (not absent) skips migration
+## TC-02-10 — Store with empty senders array triggers migration
 
 **Priority:** P2
 
-**Description:** Verify that an edge case where `senders` is present but empty (`[]`) is treated as "no migration needed" (the `hasSenders` check is false but the field exists).
+**Description:** Verify that when `senders` is present but empty (`[]`) and a legacy `encryptedToken` exists, migration runs and creates a profile. The guard condition `!store.senders || store.senders.length === 0` treats an empty array the same as absent.
 
 **Preconditions:**
 - `mailtrap-store.json` contains:
@@ -255,7 +255,6 @@
 2. Call `listSenders()`.
 
 **Expected result:**
-- Behavior depends on implementation of the guard condition `hasSenders || !hasLegacyToken`.
-- With `senders = []`, `hasSenders` is `false` and `hasLegacyToken` is `true`, so migration should run.
+- Migration runs because `senders.length === 0` and `encryptedToken` is present.
 - `listSenders()` returns one profile created from the legacy token.
-- Document the actual behavior; flag if different from expected.
+- Legacy fields are removed from the store file.

@@ -116,7 +116,7 @@ Stories are grouped by layer. Each story has an ID, a priority (P1 = must-have f
 **Priority:** P1
 **Acceptance criteria:**
 - `auth:restore` handler reads `lastActiveSenderId`, looks up the matching sender profile, initialises the API client, starts polling
-- Returns `{ authenticated: true, accountId, accountName, senderId }` on success
+- Returns `{ authenticated: true, accountId, accountName, senderId, senderDisplayName }` on success
 - Returns `{ authenticated: false }` if no `lastActiveSenderId` or profile not found
 - Legacy path (single token in store, migration not yet run) is handled by running migration first
 
@@ -203,9 +203,9 @@ Stories are grouped by layer. Each story has an ID, a priority (P1 = must-have f
 
 **Priority:** P2
 **Acceptance criteria:**
-- `AppState` gains `senderId: string | null`
-- `setAuthenticated` updated to accept `(accountId, accountName, senderId)` — existing callers updated
-- `setUnauthenticated` resets `senderId` to null
+- `AppState` gains `senderId: string | null` and `senderDisplayName: string | null`
+- `setAuthenticated` updated to accept `(accountId, accountName, senderId, senderDisplayName)` — existing callers updated
+- `setUnauthenticated` resets `senderId` and `senderDisplayName` to null
 
 **Notes:** Small typing change; touches several call sites. ~S.
 

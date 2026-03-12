@@ -163,7 +163,7 @@
 2. Call `listSenders()`.
 
 **Expected result:**
-- Return value: `{ success: false, error: 'This account is already saved as "Personal"' }`.
+- Return value: `{ success: false, error: 'Account "personalaccount" is already added' }`.
 - `listSenders()` still returns exactly one sender (no duplicate created).
 - API client is destroyed after the duplicate check.
 

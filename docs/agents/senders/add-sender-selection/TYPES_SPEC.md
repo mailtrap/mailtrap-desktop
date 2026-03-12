@@ -82,7 +82,7 @@ Updated response from `auth:restore`. The `senderId` field is new; it is optiona
 
 ```typescript
 export type RestoreAuthResult =
-  | { authenticated: true;  accountId: number; accountName?: string; senderId: string }
+  | { authenticated: true;  accountId: number; accountName?: string; senderId: string; senderDisplayName: string }
   | { authenticated: false }
 ```
 

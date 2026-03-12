@@ -73,7 +73,7 @@ Use **Option A** — tokens never leave the main process after initial save.
 ### Consequences
 
 - All token-requiring operations (`selectSender`, `addSender`, restore) are IPC calls handled exclusively in the main process.
-- The renderer cannot cache or inspect the token for debugging. Developers who need to verify a token for debugging must add a temporary main-process log statement.
+- The renderer cannot cache or inspect the token for debugging. Developers who need to verify token-related issues should check HTTP response status codes in the main process logs. Never log raw tokens — use redacted placeholders (e.g., `token: ***${last4}`) if token identification is needed.
 - Revoked-token detection relies on the 401 HTTP response from the API, not on renderer-side token inspection.
 
 ---
@@ -109,7 +109,8 @@ Use **Option A** — cache remains global, not sender-scoped, in v1.
 
 ### Consequences
 
-- After switching senders, the user briefly sees the previous sender's inbox summaries and sending stats in the tray and UI. The display corrects within the next polling interval.
+- All caches are cleared on sender switch (`clearAllCaches()` is called in `auth:add-sender` and `auth:select-sender` handlers), so stale data from the previous sender is not displayed. However, cache is still not keyed by sender — if the user switches back, data must be re-fetched.
+- After switching senders, the UI shows empty/loading state until the first poll completes.
 - If a domain ID from sender A happens to match a domain ID from sender B (unlikely but theoretically possible), the stats cache entry will be incorrectly reused. This is an accepted v1 risk.
 - A future v2 improvement would prefix all cache keys with `senderId` and flush keys for the previous sender on activation. This change is isolated to `store.ts` and the cache-write IPC handlers.
 
