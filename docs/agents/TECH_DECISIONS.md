@@ -67,7 +67,7 @@ Use **Option A** — tokens never leave the main process after initial save.
 
 - Electron's renderer process runs in a sandboxed Chromium context, but it is still web content and is the attack surface most likely to be targeted by third-party code (e.g. a supply-chain attack on a renderer dependency).
 - Once a token is in the renderer's JavaScript heap it can be read by any code running in that context. Keeping tokens exclusively in the main process and `safeStorage`-encrypted at rest provides defence-in-depth.
-- This pattern is consistent with what the current `auth:restore` already does (it reads the token in the main process and initialises the Axios client there; the renderer only receives `accountId` and `accountName`).
+- This pattern is consistent with what `auth:restore` does (it reads the token in the main process and initialises the Axios client there; the renderer only receives non-sensitive fields: `accountId`, `accountName`, `senderId`, and `senderDisplayName`).
 - `SenderProfilePublic = Omit<SenderProfile, 'encryptedToken'>` enforces this at the type system level — passing a `SenderProfile` where a `SenderProfilePublic` is expected is a compile error.
 
 ### Consequences

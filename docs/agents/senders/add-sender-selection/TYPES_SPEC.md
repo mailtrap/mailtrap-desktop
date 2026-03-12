@@ -78,7 +78,7 @@ export type DeleteSenderResult =
 
 ### `RestoreAuthResult`
 
-Updated response from `auth:restore`. The `senderId` field is new; it is optional to preserve backwards compatibility with any call site that ignores it.
+Updated response from `auth:restore`. The `senderId` and `senderDisplayName` fields are new and required in the success branch.
 
 ```typescript
 export type RestoreAuthResult =

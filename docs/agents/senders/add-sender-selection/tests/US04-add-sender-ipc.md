@@ -22,13 +22,13 @@
 2. Await the result.
 3. Call `listSenders()` in the main process.
 4. Call `getLastActiveSenderId()`.
-5. Confirm polling has started (e.g., `isPolling()` returns `true`).
+5. Confirm polling has started (verify `startPolling()` was called, e.g. via spy or by checking that polling timers are set).
 
 **Expected result:**
 - Return value: `{ success: true, senderId: <uuid>, accountId: 100, accountName: "workaccount" }`.
 - `listSenders()` returns one entry with `displayName: "Work"`, `accountId: 100`, `accountName: "workaccount"`.
 - `getLastActiveSenderId()` returns the same UUID as `senderId`.
-- Polling is active.
+- `startPolling()` was called.
 
 ---
 
@@ -186,7 +186,7 @@
 **Expected result:**
 - Return value: `{ success: false, error: <axios error message, e.g. "Request failed with status code 401"> }`.
 - No profile saved (`listSenders()` returns `[]`).
-- API client is destroyed (no stale client remains).
+- The temporary validation client is discarded; the singleton API client is untouched (was never initialized for this attempt).
 - Polling is not started.
 
 ---
@@ -207,7 +207,7 @@
 **Expected result:**
 - Return value: `{ success: false, error: <axios timeout error message> }`.
 - No profile saved.
-- API client is destroyed.
+- The temporary validation client is discarded; the singleton API client is untouched.
 - Polling is not started.
 
 ---
