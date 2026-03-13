@@ -12,6 +12,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Docs (agent-generated)
+docs/
+
 # Logs
 *.log
 npm-debug.log*
