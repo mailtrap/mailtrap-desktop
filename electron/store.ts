@@ -8,7 +8,13 @@ import { DEFAULT_SETTINGS } from './api/types'
 
 function getStorePath(): string {
   const userDataPath = app.getPath('userData')
-  return join(userDataPath, 'mailtrap-store.json')
+  const newPath = join(userDataPath, 'port587-store.json')
+  // Backwards compat: if old store exists and new doesn't, use old path
+  const legacyPath = join(userDataPath, 'mailtrap-store.json')
+  if (!existsSync(newPath) && existsSync(legacyPath)) {
+    return legacyPath
+  }
+  return newPath
 }
 
 interface CachedSendingStats {

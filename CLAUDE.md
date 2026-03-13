@@ -1,5 +1,5 @@
-# Mailtrap Desktop
-Electron desktop app for Mailtrap — system tray integration with sandbox email testing and API/SMTP sending stats.
+# Port587
+Electron desktop app for multiple email senders — system tray integration with sandbox email testing and API/SMTP sending stats. Currently supports Mailtrap with more senders planned.
 
 ## Tech Stack
 - **Runtime:** Electron 35, Node.js
@@ -7,7 +7,7 @@ Electron desktop app for Mailtrap — system tray integration with sandbox email
 - **Build:** electron-vite, Vite, TypeScript
 - **IPC:** Typed preload bridge (contextBridge + ipcRenderer/ipcMain)
 - **Storage:** Custom JSON store with encryption (electron safeStorage)
-- **API:** Axios HTTP client against Mailtrap API
+- **API:** Axios HTTP client against sender APIs (currently Mailtrap)
 
 ## Common Commands
 ```bash
@@ -46,7 +46,7 @@ src/
     sending/           # SendingDash (API/SMTP stats)
     sandbox/           # InboxList, InboxView (email testing)
     settings/          # Settings page
-    auth/              # TokenSetup (login)
+    auth/              # SenderList, AddSender (multi-account login)
     ui/                # Reusable UI components (Button, ErrorBoundary)
   hooks/               # useCacheFetch, usePollingInterval, useNavigation
 ```

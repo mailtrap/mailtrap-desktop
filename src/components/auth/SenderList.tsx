@@ -191,7 +191,7 @@ export default function SenderList({ onAddSender }: SenderListProps) {
               </svg>
             </div>
             <p className="text-body text-grey-muted mb-6">
-              Add an account to get started with Mailtrap Desktop.
+              Add an account to get started with Port587.
             </p>
             <Button className="w-full" onClick={onAddSender}>
               + Add account
@@ -216,7 +216,7 @@ export default function SenderList({ onAddSender }: SenderListProps) {
             </svg>
           </div>
           <p className="text-body text-grey-muted">
-            Connect to a Mailtrap account
+            Select an account to connect
           </p>
         </div>
 

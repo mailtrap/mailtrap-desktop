@@ -106,7 +106,7 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
               type="password"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter your Mailtrap API token"
+              placeholder="Enter your API token"
               className="input"
               disabled={loading}
             />

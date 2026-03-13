@@ -5,7 +5,7 @@ import { registerIpcHandlers } from './ipc/handlers'
 import { getSettings } from './store'
 
 // Set app name (visible in dock & menu bar instead of "Electron")
-app.setName('Mailtrap')
+app.setName('Port587')
 
 let mainWindow: BrowserWindow | null = null
 
