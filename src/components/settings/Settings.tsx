@@ -164,7 +164,7 @@ export default function Settings() {
         {/* Launch at Startup */}
         <SettingRow
           label="Launch at Startup"
-          description="Automatically start Mailtrap when you log in"
+          description="Automatically start Port587 when you log in"
         >
           <ToggleSwitch
             checked={settings.launchAtStartup}
@@ -179,10 +179,10 @@ export default function Settings() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-item-label text-navy-air">
-              Disconnect Account
+              Disconnect
             </p>
             <p className="text-body-s text-grey-muted">
-              Remove your API token and log out
+              Log out and return to the sender list
             </p>
           </div>
           <Button

@@ -13,14 +13,24 @@ import type {
   CacheEntry,
   StatsCacheEntry,
   EmailCacheEntry,
+  SenderProfilePublic,
+  AddSenderResult,
+  SelectSenderResult,
+  DeleteSenderResult,
+  RestoreAuthResult,
 } from './api/types'
 
 export interface ElectronAPI {
   // Auth
   hasToken: () => Promise<boolean>
-  login: (token: string) => Promise<{ success: boolean; accountId?: number; accountName?: string; error?: string }>
   logout: () => Promise<{ success: boolean }>
-  restoreAuth: () => Promise<{ authenticated: boolean; accountId?: number; accountName?: string }>
+  restoreAuth: () => Promise<RestoreAuthResult>
+
+  // Sender Profiles
+  listSenders: () => Promise<SenderProfilePublic[]>
+  addSender: (displayName: string, token: string) => Promise<AddSenderResult>
+  selectSender: (senderId: string) => Promise<SelectSenderResult>
+  deleteSender: (senderId: string) => Promise<DeleteSenderResult>
 
   // Sandbox
   getProjects: () => Promise<unknown[]>
@@ -77,9 +87,14 @@ export interface ElectronAPI {
 const api: ElectronAPI = {
   // Auth
   hasToken: () => ipcRenderer.invoke('auth:get-token'),
-  login: (token) => ipcRenderer.invoke('auth:login', token),
   logout: () => ipcRenderer.invoke('auth:logout'),
   restoreAuth: () => ipcRenderer.invoke('auth:restore'),
+
+  // Sender Profiles
+  listSenders: () => ipcRenderer.invoke('auth:list-senders'),
+  addSender: (displayName, token) => ipcRenderer.invoke('auth:add-sender', displayName, token),
+  selectSender: (senderId) => ipcRenderer.invoke('auth:select-sender', senderId),
+  deleteSender: (senderId) => ipcRenderer.invoke('auth:delete-sender', senderId),
 
   // Sandbox
   getProjects: () => ipcRenderer.invoke('sandbox:get-projects'),

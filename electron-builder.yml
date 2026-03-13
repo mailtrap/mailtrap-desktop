@@ -1,5 +1,5 @@
-appId: io.mailtrap.desktop
-productName: Mailtrap
+appId: app.port587.desktop
+productName: Port587
 directories:
   buildResources: resources
   output: release

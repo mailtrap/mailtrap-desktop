@@ -2,12 +2,19 @@ import { safeStorage } from 'electron'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
-import type { AppSettings } from './api/types'
+import { randomUUID } from 'crypto'
+import type { AppSettings, SenderProfile } from './api/types'
 import { DEFAULT_SETTINGS } from './api/types'
 
 function getStorePath(): string {
   const userDataPath = app.getPath('userData')
-  return join(userDataPath, 'mailtrap-store.json')
+  const newPath = join(userDataPath, 'port587-store.json')
+  // Backwards compat: if old store exists and new doesn't, use old path
+  const legacyPath = join(userDataPath, 'mailtrap-store.json')
+  if (!existsSync(newPath) && existsSync(legacyPath)) {
+    return legacyPath
+  }
+  return newPath
 }
 
 interface CachedSendingStats {
@@ -24,9 +31,16 @@ interface CachedWithTimestamp<T = unknown> {
 }
 
 interface StoreData {
+  /** @deprecated Use senders[] instead */
   encryptedToken?: string
+  /** @deprecated Use senders[] instead */
   accountId?: number
+  /** @deprecated Use senders[] instead */
   accountName?: string
+  /** Sender profiles (multi-sender support) */
+  senders?: SenderProfile[]
+  /** ID of the last active sender profile */
+  lastActiveSenderId?: string
   /** Inbox IDs hidden from the tray menu (default: all visible) */
   hiddenTrayInboxIds?: number[]
   /** Cached sending stats keyed by "domainId_timeRange" */
@@ -44,6 +58,30 @@ interface StoreData {
 
 let storeCache: StoreData | null = null
 
+/**
+ * Migrates legacy single-token store data to the multi-sender format.
+ * Idempotent: does nothing if senders[] already has entries.
+ */
+function migrateIfNeeded(store: StoreData): StoreData {
+  if (store.encryptedToken && (!store.senders || store.senders.length === 0)) {
+    const profile: SenderProfile = {
+      id: randomUUID(),
+      displayName: store.accountName ?? `Account ${store.accountId ?? 'unknown'}`,
+      encryptedToken: store.encryptedToken,
+      accountId: store.accountId ?? 0,
+      accountName: store.accountName ?? '',
+      createdAt: new Date().toISOString(),
+    }
+    store.senders = [profile]
+    store.lastActiveSenderId = profile.id
+    delete store.encryptedToken
+    delete store.accountId
+    delete store.accountName
+    writeStore(store)
+  }
+  return store
+}
+
 function readStore(): StoreData {
   if (storeCache) return storeCache
 
@@ -55,6 +93,7 @@ function readStore(): StoreData {
   try {
     const raw = readFileSync(storePath, 'utf-8')
     storeCache = JSON.parse(raw) as StoreData
+    storeCache = migrateIfNeeded(storeCache)
     return storeCache
   } catch {
     storeCache = { settings: { ...DEFAULT_SETTINGS } }
@@ -76,34 +115,55 @@ export function clearStoreCache(): void {
   storeCache = null
 }
 
+/**
+ * Clears all cached API data from persistent storage.
+ * Call when switching senders to prevent stale data from a previous sender being visible.
+ */
+export function clearAllCaches(): void {
+  const store = readStore()
+  delete store.sendingStatsCache
+  delete store.inboxSummariesCache
+  delete store.messagesCache
+  delete store.emailCache
+  delete store.sendingDomainsCache
+  writeStore(store)
+}
+
+// ── Encryption Helpers ──
+
+export function encryptToken(token: string): string {
+  if (safeStorage.isEncryptionAvailable()) {
+    const encrypted = safeStorage.encryptString(token)
+    return encrypted.toString('base64')
+  }
+  // Fallback: store as base64 (not truly secure, but works on all platforms)
+  return Buffer.from(token).toString('base64')
+}
+
+export function decryptToken(encrypted: string): string | null {
+  try {
+    if (safeStorage.isEncryptionAvailable()) {
+      const buffer = Buffer.from(encrypted, 'base64')
+      return safeStorage.decryptString(buffer)
+    }
+    return Buffer.from(encrypted, 'base64').toString('utf-8')
+  } catch {
+    return null
+  }
+}
+
 // ── Token Management ──
 
 export function saveToken(token: string): void {
   const store = readStore()
-  if (safeStorage.isEncryptionAvailable()) {
-    const encrypted = safeStorage.encryptString(token)
-    store.encryptedToken = encrypted.toString('base64')
-  } else {
-    // Fallback: store as base64 (not truly secure, but works on all platforms)
-    store.encryptedToken = Buffer.from(token).toString('base64')
-  }
+  store.encryptedToken = encryptToken(token)
   writeStore(store)
 }
 
 export function getToken(): string | null {
   const store = readStore()
   if (!store.encryptedToken) return null
-
-  try {
-    if (safeStorage.isEncryptionAvailable()) {
-      const buffer = Buffer.from(store.encryptedToken, 'base64')
-      return safeStorage.decryptString(buffer)
-    } else {
-      return Buffer.from(store.encryptedToken, 'base64').toString('utf-8')
-    }
-  } catch {
-    return null
-  }
+  return decryptToken(store.encryptedToken)
 }
 
 export function deleteToken(): void {
@@ -136,6 +196,17 @@ export function saveAccountName(name: string): void {
 export function getAccountName(): string | null {
   const store = readStore()
   return store.accountName ?? null
+}
+
+/**
+ * Clears the deprecated root-level accountId and accountName fields.
+ * Call on logout to prevent stale values from lingering.
+ */
+export function clearActiveAccount(): void {
+  const store = readStore()
+  delete store.accountId
+  delete store.accountName
+  writeStore(store)
 }
 
 // ── Tray Visibility ──
@@ -275,4 +346,52 @@ export function saveEmailCache(inboxId: number, messageId: number, data: unknown
 export function getEmailCache(inboxId: number, messageId: number): CachedWithTimestamp | null {
   const store = readStore()
   return store.emailCache?.[`${inboxId}_${messageId}`] ?? null
+}
+
+// ── Sender Profile Management ──
+
+export function listSenders(): SenderProfile[] {
+  const store = readStore()
+  return store.senders ?? []
+}
+
+export function saveSender(profile: SenderProfile): void {
+  const store = readStore()
+  if (!store.senders) store.senders = []
+  store.senders.push(profile)
+  writeStore(store)
+}
+
+export function deleteSender(id: string): void {
+  const store = readStore()
+  store.senders = (store.senders ?? []).filter(s => s.id !== id)
+  writeStore(store)
+}
+
+export function getSenderById(id: string): SenderProfile | null {
+  const store = readStore()
+  return (store.senders ?? []).find(s => s.id === id) ?? null
+}
+
+export function getLastActiveSenderId(): string | null {
+  const store = readStore()
+  return store.lastActiveSenderId ?? null
+}
+
+export function setLastActiveSenderId(id: string | null): void {
+  const store = readStore()
+  if (id === null) {
+    delete store.lastActiveSenderId
+  } else {
+    store.lastActiveSenderId = id
+  }
+  writeStore(store)
+}
+
+export function getActiveSenderDisplayName(): string | null {
+  const store = readStore()
+  const activeId = store.lastActiveSenderId
+  if (!activeId) return null
+  const sender = (store.senders ?? []).find(s => s.id === activeId)
+  return sender?.displayName ?? null
 }

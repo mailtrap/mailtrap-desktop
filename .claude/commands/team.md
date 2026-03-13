@@ -1,11 +1,11 @@
-Create an agent team called "Mailtrap Desktop" to build/improve the project. Use delegate mode — you (the lead) should only coordinate, never write code.
+Create an agent team called "Port587" to build/improve the project. Use delegate mode — you (the lead) should only coordinate, never write code.
 
 ### No-Arguments Mode
 
 If `$ARGUMENTS` is empty (no work description provided), display the team roster and exit — do NOT ask for work or start any workflow:
 
 ```
-Mailtrap Desktop — Agent Team
+Port587 — Agent Team
 
 #   Role                   Scope                                          Model
 ──  ─────────────────────  ─────────────────────────────────────────────  ──────

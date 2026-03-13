@@ -1,9 +1,9 @@
 {
-  "name": "mailtrap-desktop",
-  "version": "0.1.0",
-  "description": "Desktop companion app for Mailtrap.io — sending stats and sandbox email viewer",
+  "name": "port587",
+  "version": "1.0.0",
+  "description": "Desktop email client for multiple senders — sending stats, sandbox testing, and more",
   "main": "dist/electron/main.js",
-  "author": "Mailtrap",
+  "author": "Port587",
   "license": "MIT",
   "scripts": {
     "dev": "unset ELECTRON_RUN_AS_NODE && electron-vite dev",
@@ -28,8 +28,8 @@
     "zustand": "^5.0.0"
   },
   "build": {
-    "appId": "io.mailtrap.desktop",
-    "productName": "Mailtrap",
+    "appId": "app.port587.desktop",
+    "productName": "Port587",
     "directories": {
       "output": "release"
     },
