@@ -96,7 +96,7 @@ export default function Sidebar() {
       {/* Spacer for title bar drag area */}
       <div className="h-4 shrink-0" />
 
-      {/* Mailtrap Logo */}
+      {/* Port587 Logo */}
       <div className="px-4 pb-4 pt-2">
         <AppLogo />
       </div>

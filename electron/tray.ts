@@ -255,7 +255,7 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
 
   menu.append(
     new MenuItem({
-      label: 'Open Mailtrap',
+      label: 'Open Port587',
       click: () => {
         shell.openExternal('https://mailtrap.io')
       }

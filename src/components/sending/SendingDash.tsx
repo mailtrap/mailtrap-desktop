@@ -335,7 +335,7 @@ export default function SendingDash() {
               rel="noopener noreferrer"
               className="text-blue-neutral underline hover:text-blue-medium"
             >
-              Mailtrap web app
+              Port587 web app
             </a>
             .
           </p>
