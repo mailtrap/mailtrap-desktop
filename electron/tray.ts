@@ -83,7 +83,7 @@ export function createTray(mainWindow: BrowserWindow): void {
     mainWindowRef = mainWindow
     const icon = createTrayIcon()
     tray = new Tray(icon)
-    tray.setToolTip('Mailtrap')
+    tray.setToolTip('Port587')
 
     // Restore cached data so tray is populated immediately on launch
     try {
@@ -255,7 +255,7 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
 
   menu.append(
     new MenuItem({
-      label: 'Open Mailtrap Web',
+      label: 'Open Mailtrap',
       click: () => {
         shell.openExternal('https://mailtrap.io')
       }
@@ -266,7 +266,7 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
 
   menu.append(
     new MenuItem({
-      label: 'Quit Mailtrap',
+      label: 'Quit Port587',
       click: () => {
         app.quit()
       }

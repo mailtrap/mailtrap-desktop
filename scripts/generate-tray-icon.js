@@ -1,7 +1,7 @@
 /**
  * Simple script to generate a tray icon PNG from an SVG.
  * For production, replace resources/trayIconTemplate.png with an actual
- * Mailtrap logo exported as a template image (black on transparent for macOS).
+ * Port587 logo exported as a template image (black on transparent for macOS).
  *
  * For now, we create a minimal placeholder.
  * Run: node scripts/generate-tray-icon.js
@@ -12,7 +12,7 @@ const path = require('path')
 
 // Minimal 18x18 PNG (envelope icon placeholder, black on transparent)
 // This is a valid 1-pixel PNG that will serve as a placeholder.
-// Replace with actual Mailtrap logo for production.
+// Replace with actual Port587 logo for production.
 
 // A simple black square 18x18 PNG in base64 (placeholder)
 const PLACEHOLDER_PNG_BASE64 =
@@ -29,4 +29,4 @@ if (!fs.existsSync(outDir)) {
 const outPath = path.join(outDir, 'trayIconTemplate.png')
 fs.writeFileSync(outPath, Buffer.from(PLACEHOLDER_PNG_BASE64, 'base64'))
 console.log(`Tray icon placeholder written to ${outPath}`)
-console.log('Replace this with the actual Mailtrap logo for production.')
+console.log('Replace this with the actual Port587 logo for production.')

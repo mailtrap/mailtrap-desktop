@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
-function MailtrapLogo() {
+function AppLogo() {
   return (
     <svg className="h-8" viewBox="0 0 135 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M6.8047 29.3446L3.42064 31.358C2.96157 31.6608 3.17134 32.1813 3.42064 32.2861L16.5632 39.6726C17.3395 40.1089 18.296 40.1089 19.0723 39.6726L32.3889 32.1883C32.7924 31.9486 32.7261 31.4613 32.3889 31.2969L28.8108 29.3577C28.5087 29.1579 27.8353 29.2243 27.5967 29.3871L19.0723 34.178C18.296 34.6143 17.3395 34.6143 16.5632 34.178L7.96324 29.3446C7.64264 29.1468 7.13479 29.158 6.8047 29.3446Z" fill="#FBFCFC"/>
@@ -98,7 +98,7 @@ export default function Sidebar() {
 
       {/* Mailtrap Logo */}
       <div className="px-4 pb-4 pt-2">
-        <MailtrapLogo />
+        <AppLogo />
       </div>
 
       {/* Navigation */}

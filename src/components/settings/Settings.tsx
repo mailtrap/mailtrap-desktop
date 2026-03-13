@@ -164,7 +164,7 @@ export default function Settings() {
         {/* Launch at Startup */}
         <SettingRow
           label="Launch at Startup"
-          description="Automatically start Mailtrap when you log in"
+          description="Automatically start Port587 when you log in"
         >
           <ToggleSwitch
             checked={settings.launchAtStartup}
