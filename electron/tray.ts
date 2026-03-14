@@ -2,7 +2,8 @@ import { Tray, Menu, MenuItem, BrowserWindow, nativeImage, shell, app } from 'el
 import { join } from 'path'
 import { existsSync } from 'fs'
 import type { InboxSummary, SendingStreamSummary } from './api/types'
-import { isInboxVisibleInTray, getInboxSummariesCache, getSettings, getActiveSenderDisplayName } from './store'
+import { VENDOR_DISPLAY_NAMES } from './api/types'
+import { isInboxVisibleInTray, getInboxSummariesCache, getSettings, getActiveSenderDisplayName, getVendorCapabilities, getLastActiveSenderId, getSenderById } from './store'
 
 let tray: Tray | null = null
 let cachedInboxes: InboxSummary[] = []
@@ -111,16 +112,21 @@ export function createTray(mainWindow: BrowserWindow): void {
 
 let mainWindowRef: BrowserWindow | null = null
 
+// ── Debounced updateTrayData ──
+// Collapses multiple calls within 500ms into a single tray rebuild.
+let trayDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
 export function updateTrayData(
   inboxes: InboxSummary[],
   streams: SendingStreamSummary[]
 ): void {
   cachedInboxes = inboxes
   cachedStreams = streams
-  // Rebuild the menu so it reflects the latest data
-  if (mainWindowRef) {
-    rebuildTrayMenu(mainWindowRef)
-  }
+  if (trayDebounceTimer) clearTimeout(trayDebounceTimer)
+  trayDebounceTimer = setTimeout(() => {
+    if (mainWindowRef) rebuildTrayMenu(mainWindowRef)
+    trayDebounceTimer = null
+  }, 500)
 }
 
 export function refreshTrayMenu(): void {
@@ -132,16 +138,23 @@ export function refreshTrayMenu(): void {
 function rebuildTrayMenu(mainWindow: BrowserWindow): void {
   const menu = new Menu()
   const settings = getSettings()
+  const capabilities = getVendorCapabilities()
 
-  // ── Connected Sender Label ──
+  // ── Connected Sender Label (with vendor display name) ──
   const senderDisplayName = getActiveSenderDisplayName()
   if (senderDisplayName) {
-    menu.append(new MenuItem({ label: `Connected as: ${senderDisplayName}`, enabled: false }))
+    const senderId = getLastActiveSenderId()
+    const profile = senderId ? getSenderById(senderId) : null
+    const vendorName = profile?.vendor ? VENDOR_DISPLAY_NAMES[profile.vendor] : undefined
+    const label = vendorName
+      ? `Connected as: ${senderDisplayName} (${vendorName})`
+      : `Connected as: ${senderDisplayName}`
+    menu.append(new MenuItem({ label, enabled: false }))
     menu.append(new MenuItem({ type: 'separator' }))
   }
 
-  // ── Sandboxes Section ──
-  if (settings.sandboxEnabled) {
+  // ── Sandboxes Section (only for vendors with sandbox capability) ──
+  if (capabilities.sandbox && settings.sandboxEnabled) {
     menu.append(
       new MenuItem({
         label: 'Sandboxes',
@@ -202,11 +215,11 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
     menu.append(new MenuItem({ type: 'separator' }))
   }
 
-  // ── API/SMTP Section ──
+  // ── Stats Section (renamed from "API/SMTP") ──
   if (settings.sendingEnabled) {
     menu.append(
       new MenuItem({
-        label: 'API/SMTP',
+        label: 'Stats',
         enabled: false
       })
     )
