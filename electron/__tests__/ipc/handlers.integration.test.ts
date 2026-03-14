@@ -19,6 +19,9 @@ vi.mock('electron', () => ({
     isEncryptionAvailable: () => false,
     encryptString: (str: string) => Buffer.from(str),
     decryptString: (buf: Buffer) => buf.toString()
+  },
+  BrowserWindow: {
+    getAllWindows: () => []
   }
 }))
 
@@ -38,7 +41,17 @@ vi.mock('../../polling', () => ({
   startPolling: vi.fn(),
   stopPolling: vi.fn(),
   restartTestingPolling: vi.fn(),
-  restartSendingPolling: vi.fn()
+  restartSendingPolling: vi.fn(),
+  stopTestingPolling: vi.fn(),
+  stopSendingPolling: vi.fn()
+}))
+
+vi.mock('../../tray', () => ({
+  refreshTrayMenu: vi.fn()
+}))
+
+vi.mock('../../api/vendors', () => ({
+  getConnector: vi.fn()
 }))
 
 // Mock fs to use in-memory storage
@@ -112,7 +125,7 @@ describe('Auth flow', () => {
     expect(destroyApiClients).toHaveBeenCalled()
   })
 
-  it('logout → stops polling → deletes token', async () => {
+  it('logout → stops polling → clears active sender', async () => {
     // First login
     mockGet.mockResolvedValueOnce({
       data: [{ id: 1, name: 'Acct', access_levels: [] }]
@@ -124,16 +137,26 @@ describe('Auth flow', () => {
     expect(result).toEqual({ success: true })
     expect(stopPolling).toHaveBeenCalled()
     expect(destroyApiClients).toHaveBeenCalled()
-    // Token should be removed
-    expect(storeData).not.toHaveProperty('encryptedToken')
+    // Active sender and account info should be cleared
+    expect(storeData).not.toHaveProperty('lastActiveSenderId')
+    expect(storeData).not.toHaveProperty('accountId')
+    expect(storeData).not.toHaveProperty('accountName')
   })
 
   it('restore → initializes clients if token exists', async () => {
-    // Pre-populate store with a token and account
+    // Pre-populate store with a sender profile (multi-vendor format)
+    const senderId = 'test-sender-id'
     storeData = {
-      encryptedToken: Buffer.from('stored-token').toString('base64'),
-      accountId: 99,
-      accountName: 'Restored',
+      senders: [{
+        id: senderId,
+        displayName: 'Restored',
+        encryptedToken: Buffer.from('stored-token').toString('base64'),
+        accountId: 99,
+        accountName: 'Restored',
+        vendor: 'mailtrap',
+        createdAt: new Date().toISOString()
+      }],
+      lastActiveSenderId: senderId,
       settings: {}
     }
 
@@ -142,7 +165,10 @@ describe('Auth flow', () => {
     expect(result).toEqual({
       authenticated: true,
       accountId: 99,
-      accountName: 'Restored'
+      accountName: 'Restored',
+      senderId,
+      senderDisplayName: 'Restored',
+      vendor: 'mailtrap'
     })
     expect(initApiClients).toHaveBeenCalled()
     expect(startPolling).toHaveBeenCalled()
@@ -174,6 +200,10 @@ describe('Sandbox handlers', () => {
       data: [{ id: 10, name: 'Acct', access_levels: [] }]
     })
     await invoke('auth:login', 'token')
+    // Clear in-memory cache so the next readStore() re-reads from disk and
+    // migrateIfNeeded() converts the legacy token into a sender profile,
+    // which is required by the new getActiveProfile()-based withAuth guard.
+    clearStoreCache()
     mockGet.mockReset()
   })
 
