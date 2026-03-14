@@ -6,7 +6,7 @@ import { Button } from '../ui/Button'
 import { LastUpdatedIndicator } from '../ui/LastUpdatedIndicator'
 import { useCacheFetch } from '../../hooks/useCacheFetch'
 import { usePollingInterval } from '../../hooks/usePollingInterval'
-import { formatCount, formatPercent } from '../../utils/formatters'
+import { useAppStore } from '../../stores/appStore'
 import type {
   SendingDomain,
   AggregatedStats,
@@ -14,14 +14,13 @@ import type {
   ProviderStats,
   CategoryStats,
   StatsRow,
+  VendorCapabilities,
 } from '../../../electron/api/types'
 
 type TimeRange = '7d' | '30d'
 
 const BOUNCE_THRESHOLD = 5 // 5%
 const SPAM_THRESHOLD = 0.1 // 0.1%
-
-
 
 function toStatsRow(p: ProviderStats): StatsRow {
   return {
@@ -45,20 +44,72 @@ function categoryToStatsRow(c: CategoryStats): StatsRow {
   }
 }
 
+/** Vendor-agnostic domain item shape */
+interface DomainItem {
+  id: string | number
+  name: string
+}
+
 export default function SendingDash() {
+  const vendor = useAppStore((s) => s.vendor)
+  const isMailtrap = vendor === 'mailtrap' || vendor === null
+  const [capabilities, setCapabilities] = useState<VendorCapabilities | null>(null)
+
+  useEffect(() => {
+    window.electron.getCapabilities().then(setCapabilities)
+  }, [vendor])
+
+  // --- Domain loading ---
+  // For Mailtrap, use legacy getDomains; for others, use getVendorDomains
   const {
-    data: domains,
-    loading: domainsLoading,
-    error: domainsError,
-    refresh: refreshDomains,
+    data: mailtrapDomains,
+    loading: mailtrapDomainsLoading,
+    error: mailtrapDomainsError,
+    refresh: refreshMailtrapDomains,
   } = useCacheFetch<SendingDomain[]>({
-    getCached: () => window.electron.getSendingDomainsCache(),
-    getFresh: () => window.electron.getDomains(),
-    saveToCache: (data) => { window.electron.saveSendingDomainsCache(data) },
+    getCached: () => isMailtrap ? window.electron.getSendingDomainsCache() : Promise.resolve(null),
+    getFresh: () => isMailtrap ? window.electron.getDomains() : Promise.resolve([]),
+    saveToCache: (data) => { if (isMailtrap) window.electron.saveSendingDomainsCache(data) },
     isEmpty: (data) => data.length === 0,
   })
 
-  const [selectedDomain, setSelectedDomain] = useState<SendingDomain | null | undefined>(undefined)
+  const [vendorDomains, setVendorDomains] = useState<{ id: string; name: string }[]>([])
+  const [vendorDomainsLoading, setVendorDomainsLoading] = useState(!isMailtrap)
+  const [vendorDomainsError, setVendorDomainsError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isMailtrap) {
+      setVendorDomainsLoading(true)
+      window.electron.getVendorDomains()
+        .then((d) => {
+          setVendorDomains(d)
+          setVendorDomainsLoading(false)
+        })
+        .catch((e: unknown) => {
+          setVendorDomainsError(e instanceof Error ? e.message : 'Failed to load domains')
+          setVendorDomainsLoading(false)
+        })
+    }
+  }, [isMailtrap])
+
+  // Normalize domain list
+  const domainItems: DomainItem[] = isMailtrap
+    ? (mailtrapDomains ?? []).map((d) => ({ id: d.id, name: d.domain_name }))
+    : vendorDomains.map((d) => ({ id: d.id, name: d.name }))
+
+  const domainsLoading = isMailtrap ? mailtrapDomainsLoading : vendorDomainsLoading
+  const domainsError = isMailtrap ? mailtrapDomainsError : vendorDomainsError
+  const refreshDomains = isMailtrap
+    ? refreshMailtrapDomains
+    : () => {
+        setVendorDomainsLoading(true)
+        window.electron.getVendorDomains()
+          .then(setVendorDomains)
+          .catch(() => {})
+          .finally(() => setVendorDomainsLoading(false))
+      }
+
+  const [selectedDomainId, setSelectedDomainId] = useState<string | number | null | undefined>(undefined)
   const [stats, setStats] = useState<AggregatedStats | null>(null)
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([])
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
@@ -75,16 +126,16 @@ export default function SendingDash() {
 
   // Default to "All Domains" once domains load
   useEffect(() => {
-    if (domains && domains.length > 0 && selectedDomain === undefined) {
-      setSelectedDomain(null)
+    if (domainItems.length > 0 && selectedDomainId === undefined) {
+      setSelectedDomainId(null)
     }
-  }, [domains, selectedDomain])
+  }, [domainItems, selectedDomainId])
 
   useEffect(() => {
-    if (selectedDomain !== undefined) {
-      loadCacheThenFetchStats(selectedDomain?.id ?? null, timeRange)
+    if (selectedDomainId !== undefined) {
+      loadCacheThenFetchStats(selectedDomainId, timeRange)
     }
-  }, [selectedDomain, timeRange])
+  }, [selectedDomainId, timeRange])
 
   // Auto-refresh with proper cleanup
   usePollingInterval(
@@ -97,29 +148,33 @@ export default function SendingDash() {
 
   useEffect(() => {
     refreshRef.current = () => {
-      fetchFreshStats(selectedDomain?.id ?? null, timeRange)
+      fetchFreshStats(selectedDomainId ?? null, timeRange)
     }
-  }, [selectedDomain, timeRange])
+  }, [selectedDomainId, timeRange])
 
-  const loadCacheThenFetchStats = async (domainId: number | null, range: TimeRange) => {
-    const cacheKey = domainId ?? 0
-    try {
-      const cached = await window.electron.getSendingStatsCache(cacheKey, range)
-      if (cached?.stats) {
-        setStats(cached.stats)
-        setDailyStats(cached.dailyStats)
-        if (cached.providerRows?.length) setProviderRows(cached.providerRows)
-        if (cached.categoryRows?.length) setCategoryRows(cached.categoryRows)
-        setLastFetchedAt(cached.fetchedAt)
-        setIsFromCache(true)
-        setStatsLoading(false)
-      }
-    } catch {}
+  const loadCacheThenFetchStats = async (domainId: string | number | null | undefined, range: TimeRange) => {
+    const resolvedId = domainId ?? null
+    // Only load from cache for Mailtrap (which uses numeric IDs)
+    if (isMailtrap) {
+      const cacheKey = (typeof resolvedId === 'number' ? resolvedId : 0)
+      try {
+        const cached = await window.electron.getSendingStatsCache(cacheKey, range)
+        if (cached?.stats) {
+          setStats(cached.stats)
+          setDailyStats(cached.dailyStats)
+          if (cached.providerRows?.length) setProviderRows(cached.providerRows)
+          if (cached.categoryRows?.length) setCategoryRows(cached.categoryRows)
+          setLastFetchedAt(cached.fetchedAt)
+          setIsFromCache(true)
+          setStatsLoading(false)
+        }
+      } catch {}
+    }
 
-    await fetchFreshStats(domainId, range)
+    await fetchFreshStats(resolvedId, range)
   }
 
-  const fetchFreshStats = async (domainId: number | null, range: TimeRange) => {
+  const fetchFreshStats = async (domainId: string | number | null, range: TimeRange) => {
     let hasDisplayedData = false
     setStats((prev) => { hasDisplayedData = prev !== null; return prev })
 
@@ -138,61 +193,79 @@ export default function SendingDash() {
         .toISOString()
         .split('T')[0]
 
-      const domainFilter = domainId ? [domainId] : undefined
+      if (isMailtrap) {
+        // Mailtrap path: use legacy channels
+        const domainFilter = typeof domainId === 'number' && domainId ? [domainId] : undefined
 
-      const [statsResult, dailyResult, providerResult, categoryResult] = await Promise.all([
-        window.electron.getStats(startDate, endDate, domainFilter)
-          .then((d) => ({ ok: true as const, data: d }))
-          .catch((e: unknown) => ({ ok: false as const, error: e })),
-        window.electron.getDailyStats(startDate, endDate, domainFilter)
-          .then((d) => ({ ok: true as const, data: d }))
-          .catch((e: unknown) => ({ ok: false as const, error: e })),
-        window.electron.getProviderStats(startDate, endDate, domainFilter)
-          .then((d) => ({ ok: true as const, data: d }))
-          .catch(() => ({ ok: false as const, data: [] as ProviderStats[] })),
-        window.electron.getCategoryStats(startDate, endDate, domainFilter)
-          .then((d) => ({ ok: true as const, data: d }))
-          .catch(() => ({ ok: false as const, data: [] as CategoryStats[] }))
-      ])
+        const [statsResult, dailyResult, providerResult, categoryResult] = await Promise.all([
+          window.electron.getStats(startDate, endDate, domainFilter)
+            .then((d) => ({ ok: true as const, data: d }))
+            .catch((e: unknown) => ({ ok: false as const, error: e })),
+          window.electron.getDailyStats(startDate, endDate, domainFilter)
+            .then((d) => ({ ok: true as const, data: d }))
+            .catch((e: unknown) => ({ ok: false as const, error: e })),
+          window.electron.getProviderStats(startDate, endDate, domainFilter)
+            .then((d) => ({ ok: true as const, data: d }))
+            .catch(() => ({ ok: false as const, data: [] as ProviderStats[] })),
+          window.electron.getCategoryStats(startDate, endDate, domainFilter)
+            .then((d) => ({ ok: true as const, data: d }))
+            .catch(() => ({ ok: false as const, data: [] as CategoryStats[] }))
+        ])
 
-      // Provider & Category tables
-      if (providerResult.ok && providerResult.data.length > 0) {
-        setProviderRows(providerResult.data.map(toStatsRow))
-      }
-      if (categoryResult.ok && categoryResult.data.length > 0) {
-        setCategoryRows(
-          categoryResult.data
-            .filter((c) => c.category !== '')
-            .map(categoryToStatsRow)
-        )
-      }
-
-      const freshProviders = providerResult.ok ? providerResult.data.map(toStatsRow) : undefined
-      const freshCategories = categoryResult.ok
-        ? categoryResult.data.filter((c) => c.category !== '').map(categoryToStatsRow)
-        : undefined
-
-      if (statsResult.ok && dailyResult.ok) {
-        setStats(statsResult.data)
-        setDailyStats(dailyResult.data)
-        setLastFetchedAt(new Date().toISOString())
-        setIsFromCache(false)
-        setRateLimited(false)
-
-        const cacheKey = domainId ?? 0
-        window.electron.saveSendingStatsCache(cacheKey, range, statsResult.data, dailyResult.data, freshProviders, freshCategories)
-      } else {
-        const failedErr = !statsResult.ok ? statsResult.error : !dailyResult.ok ? dailyResult.error : null
-        const message = failedErr instanceof Error ? failedErr.message : String(failedErr ?? '')
-        const isRateLimit = message.toLowerCase().includes('rate limit') || message.includes('429')
-
-        if (isRateLimit) {
-          setRateLimited(true)
-          setTimeout(() => fetchFreshStats(domainId, range), 60000)
+        // Provider & Category tables
+        if (providerResult.ok && providerResult.data.length > 0) {
+          setProviderRows(providerResult.data.map(toStatsRow))
+        }
+        if (categoryResult.ok && categoryResult.data.length > 0) {
+          setCategoryRows(
+            categoryResult.data
+              .filter((c) => c.category !== '')
+              .map(categoryToStatsRow)
+          )
         }
 
-        if (!hasDisplayedData && !isRateLimit) {
-          setStatsError('Failed to load stats. Click retry to try again.')
+        const freshProviders = providerResult.ok ? providerResult.data.map(toStatsRow) : undefined
+        const freshCategories = categoryResult.ok
+          ? categoryResult.data.filter((c) => c.category !== '').map(categoryToStatsRow)
+          : undefined
+
+        if (statsResult.ok && dailyResult.ok) {
+          setStats(statsResult.data)
+          setDailyStats(dailyResult.data)
+          setLastFetchedAt(new Date().toISOString())
+          setIsFromCache(false)
+          setRateLimited(false)
+
+          const cacheKey = (typeof domainId === 'number' ? domainId : 0)
+          window.electron.saveSendingStatsCache(cacheKey, range, statsResult.data, dailyResult.data, freshProviders, freshCategories)
+        } else {
+          handleStatsError(statsResult, dailyResult, hasDisplayedData, domainId, range)
+        }
+      } else {
+        // Vendor path: use vendor-agnostic channels
+        const vendorDomainId = typeof domainId === 'string' ? domainId : null
+
+        const [statsResult, dailyResult] = await Promise.all([
+          window.electron.getVendorStats(startDate, endDate, vendorDomainId)
+            .then((d) => ({ ok: true as const, data: d }))
+            .catch((e: unknown) => ({ ok: false as const, error: e })),
+          window.electron.getVendorDailyStats(startDate, endDate, vendorDomainId)
+            .then((d) => ({ ok: true as const, data: d }))
+            .catch((e: unknown) => ({ ok: false as const, error: e })),
+        ])
+
+        // No provider/category tables for non-Mailtrap vendors
+        setProviderRows([])
+        setCategoryRows([])
+
+        if (statsResult.ok && dailyResult.ok) {
+          setStats(statsResult.data)
+          setDailyStats(dailyResult.data)
+          setLastFetchedAt(new Date().toISOString())
+          setIsFromCache(false)
+          setRateLimited(false)
+        } else {
+          handleStatsError(statsResult, dailyResult, hasDisplayedData, domainId, range)
         }
       }
     } catch {
@@ -206,6 +279,27 @@ export default function SendingDash() {
         setStatsLoading(false)
         setStatsRefreshing(false)
       }, remaining)
+    }
+  }
+
+  const handleStatsError = (
+    statsResult: { ok: boolean; error?: unknown },
+    dailyResult: { ok: boolean; error?: unknown },
+    hasDisplayedData: boolean,
+    domainId: string | number | null,
+    range: TimeRange
+  ) => {
+    const failedErr = !statsResult.ok ? statsResult.error : !dailyResult.ok ? dailyResult.error : null
+    const message = failedErr instanceof Error ? failedErr.message : String(failedErr ?? '')
+    const isRateLimit = message.toLowerCase().includes('rate limit') || message.includes('429')
+
+    if (isRateLimit) {
+      setRateLimited(true)
+      setTimeout(() => fetchFreshStats(domainId, range), 60000)
+    }
+
+    if (!hasDisplayedData && !isRateLimit) {
+      setStatsError('Failed to load stats. Click retry to try again.')
     }
   }
 
@@ -234,8 +328,8 @@ export default function SendingDash() {
     return { dateLabel: formatDateLabel(d.date), value: spamRate }
   })
 
-  const analyticsBase = 'https://mailtrap.io/sending/analytics'
   const isBounceAboveThreshold = stats ? stats.bounce_rate * 100 > BOUNCE_THRESHOLD : false
+  const showProviderCategory = capabilities?.providerStats || capabilities?.categoryStats
 
   const renderEndDate = new Date().toISOString().split('T')[0]
   const renderStartDate = new Date(Date.now() - (timeRange === '7d' ? 7 : 30) * 86400000).toISOString().split('T')[0]
@@ -243,7 +337,6 @@ export default function SendingDash() {
     `https://mailtrap.io/sending/analytics/esp?email_service_providers=${encodeURIComponent(name)}&end_date=${renderEndDate}&start_date=${renderStartDate}`
   const categoryRowLinkBuilder = (name: string) =>
     `https://mailtrap.io/sending/analytics/categories?categories=${encodeURIComponent(name)}&end_date=${renderEndDate}&start_date=${renderStartDate}`
-  const domainItems = domains ?? []
 
   if (domainsLoading && domainItems.length === 0) {
     return (
@@ -270,21 +363,21 @@ export default function SendingDash() {
           <h1 className="text-heading-1 text-navy-air">Stats Overview</h1>
           {domainItems.length > 0 && (
             <select
-              value={selectedDomain?.id ?? 'all'}
+              value={selectedDomainId != null ? String(selectedDomainId) : 'all'}
               onChange={(e) => {
                 if (e.target.value === 'all') {
-                  setSelectedDomain(null)
+                  setSelectedDomainId(null)
                 } else {
-                  const d = domainItems.find((d) => d.id === Number(e.target.value))
-                  if (d) setSelectedDomain(d)
+                  const d = domainItems.find((d) => String(d.id) === e.target.value)
+                  if (d) setSelectedDomainId(d.id)
                 }
               }}
               className="input w-auto text-body-s"
             >
               <option value="all">All Domains</option>
               {domainItems.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.domain_name}
+                <option key={String(d.id)} value={String(d.id)}>
+                  {d.name}
                 </option>
               ))}
             </select>
@@ -321,23 +414,30 @@ export default function SendingDash() {
           isFromCache={isFromCache}
           refreshing={statsRefreshing}
           rateLimited={rateLimited}
-          onRefresh={() => fetchFreshStats(selectedDomain?.id ?? null, timeRange)}
+          onRefresh={() => fetchFreshStats(selectedDomainId ?? null, timeRange)}
         />
       )}
 
       {domainItems.length === 0 ? (
         <div className="rounded-mtui border border-dashed border-grey-dark p-12 text-center">
           <p className="text-body text-grey-muted">
-            No sending domains found. Set up a domain in the{' '}
-            <a
-              href="https://mailtrap.io/sending/domains"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-neutral underline hover:text-blue-medium"
-            >
-              Port587 web app
-            </a>
-            .
+            No sending domains found.{' '}
+            {isMailtrap ? (
+              <>
+                Set up a domain in the{' '}
+                <a
+                  href="https://mailtrap.io/sending/domains"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-neutral underline hover:text-blue-medium"
+                >
+                  Mailtrap web app
+                </a>
+                .
+              </>
+            ) : (
+              'Configure a sending domain in your email service provider.'
+            )}
           </p>
         </div>
       ) : (
@@ -353,7 +453,7 @@ export default function SendingDash() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => fetchFreshStats(selectedDomain?.id ?? null, timeRange)}
+                onClick={() => fetchFreshStats(selectedDomainId ?? null, timeRange)}
                 className="text-orange-medium hover:text-orange-200"
               >
                 Retry
@@ -390,8 +490,8 @@ export default function SendingDash() {
                 />
               </div>
 
-              {/* Mailbox Providers & Category Tables */}
-              {(providerRows.length > 0 || categoryRows.length > 0) && (
+              {/* Mailbox Providers & Category Tables — Mailtrap only */}
+              {showProviderCategory && (providerRows.length > 0 || categoryRows.length > 0) && (
                 <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
                   <StatsTable
                     title="Mailbox Provi..."
@@ -419,15 +519,15 @@ export default function SendingDash() {
                     title="Unique Open Rate %"
                     data={openRateData}
                     color="#4C83EE"
-                    linkLabel="Opened Emails"
-                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22open%22%5D%7D%5D`}
+                    linkLabel={isMailtrap ? "Opened Emails" : undefined}
+                    linkUrl={isMailtrap ? `https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22open%22%5D%7D%5D` : undefined}
                   />
                   <RateChart
                     title="Click Rate %"
                     data={clickRateData}
                     color="#4C83EE"
-                    linkLabel="Email Clicks"
-                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22click%22%5D%7D%5D`}
+                    linkLabel={isMailtrap ? "Email Clicks" : undefined}
+                    linkUrl={isMailtrap ? `https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22click%22%5D%7D%5D` : undefined}
                   />
                   <RateChart
                     title="Bounce Rate %"
@@ -435,8 +535,8 @@ export default function SendingDash() {
                     color={isBounceAboveThreshold ? '#FB5151' : '#4C83EE'}
                     threshold={BOUNCE_THRESHOLD}
                     thresholdLabel={`threshold ${BOUNCE_THRESHOLD}.00%`}
-                    linkLabel="Bounced Emails"
-                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22bounce%22%5D%7D%5D`}
+                    linkLabel={isMailtrap ? "Bounced Emails" : undefined}
+                    linkUrl={isMailtrap ? `https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22bounce%22%5D%7D%5D` : undefined}
                     isCritical={isBounceAboveThreshold}
                   />
                   <RateChart
@@ -445,8 +545,8 @@ export default function SendingDash() {
                     color="#4C83EE"
                     threshold={SPAM_THRESHOLD}
                     thresholdLabel={`threshold ${SPAM_THRESHOLD.toFixed(2)}%`}
-                    linkLabel="Spam Complaints"
-                    linkUrl={`https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22spam%22%5D%7D%5D`}
+                    linkLabel={isMailtrap ? "Spam Complaints" : undefined}
+                    linkUrl={isMailtrap ? `https://mailtrap.io/sending/email_logs?end_date=${renderEndDate}&filters=%5B%7B%22name%22%3A%22events%22%2C%22operator%22%3A%22include_event%22%2C%22value%22%3A%5B%22spam%22%5D%7D%5D` : undefined}
                   />
                 </div>
               )}

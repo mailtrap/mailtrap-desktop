@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../../stores/appStore'
 import { Button } from '../ui/Button'
+import VendorLogo from '../ui/vendor-logos'
+import { VENDOR_CONFIGS } from '../auth/vendorConfig'
+import type { VendorCapabilities } from '../../../electron/api/types'
 
 interface AppSettings {
   testingPollingIntervalMs: number
@@ -15,10 +18,13 @@ export default function Settings() {
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [saving, setSaving] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [capabilities, setCapabilities] = useState<VendorCapabilities | null>(null)
   const { setUnauthenticated } = useAppStore()
+  const vendor = useAppStore((s) => s.vendor)
 
   useEffect(() => {
     window.electron.getSettings().then((s) => setSettings(s as unknown as AppSettings))
+    window.electron.getCapabilities().then(setCapabilities)
   }, [])
 
   const updateSetting = async <K extends keyof AppSettings>(
@@ -27,9 +33,12 @@ export default function Settings() {
   ) => {
     if (!settings) return
 
-    // Prevent disabling both views
-    if (key === 'sendingEnabled' && value === false && !settings.sandboxEnabled) return
-    if (key === 'sandboxEnabled' && value === false && !settings.sendingEnabled) return
+    // Prevent disabling both views (only relevant when sandbox is available)
+    const hasSandbox = capabilities?.sandbox ?? false
+    if (hasSandbox) {
+      if (key === 'sendingEnabled' && value === false && !settings.sandboxEnabled) return
+      if (key === 'sandboxEnabled' && value === false && !settings.sendingEnabled) return
+    }
 
     const updated = { ...settings, [key]: value }
     setSettings(updated)
@@ -59,44 +68,68 @@ export default function Settings() {
     )
   }
 
+  const hasSandbox = capabilities?.sandbox ?? false
+
   // Only show enabled views in the default view selector
   const defaultViewOptions: { value: string; label: string }[] = []
-  if (settings.sandboxEnabled) defaultViewOptions.push({ value: 'testing', label: 'Sandboxes' })
-  if (settings.sendingEnabled) defaultViewOptions.push({ value: 'sending', label: 'API/SMTP' })
+  if (hasSandbox && settings.sandboxEnabled) defaultViewOptions.push({ value: 'testing', label: 'Sandboxes' })
+  if (settings.sendingEnabled) defaultViewOptions.push({ value: 'sending', label: 'Stats' })
+
+  const vendorConfig = vendor ? VENDOR_CONFIGS[vendor] : null
 
   return (
     <div className="mx-auto max-w-lg p-6">
       <h1 className="mb-8 text-heading-1 text-navy-air">Settings</h1>
 
       <div className="space-y-6">
+        {/* Connected service */}
+        {vendor && vendorConfig && (
+          <>
+            <SettingRow
+              label="Connected service"
+              description="The email service for this account"
+            >
+              <div className="flex items-center gap-2">
+                <VendorLogo vendor={vendor} className="h-4 w-4 rounded-[3px]" />
+                <span className="text-item-label text-navy-air">{vendorConfig.displayName}</span>
+              </div>
+            </SettingRow>
+
+            <div className="h-px w-full bg-grey-shade" />
+          </>
+        )}
+
         {/* Enabled Views */}
         <SettingRow
-          label="API/SMTP"
-          description="Show API/SMTP sending stats view"
+          label="Sending Stats"
+          description="Show sending stats view"
         >
           <ToggleSwitch
             checked={settings.sendingEnabled}
-            disabled={settings.sendingEnabled && !settings.sandboxEnabled}
+            disabled={settings.sendingEnabled && hasSandbox && !settings.sandboxEnabled}
             onChange={() => updateSetting('sendingEnabled', !settings.sendingEnabled)}
           />
         </SettingRow>
 
-        <SettingRow
-          label="Sandboxes"
-          description="Show Sandboxes email testing view"
-        >
-          <ToggleSwitch
-            checked={settings.sandboxEnabled}
-            disabled={settings.sandboxEnabled && !settings.sendingEnabled}
-            onChange={() => updateSetting('sandboxEnabled', !settings.sandboxEnabled)}
-          />
-        </SettingRow>
+        {/* Sandboxes toggle — only for Mailtrap */}
+        {hasSandbox && (
+          <SettingRow
+            label="Sandboxes"
+            description="Show Sandboxes email testing view"
+          >
+            <ToggleSwitch
+              checked={settings.sandboxEnabled}
+              disabled={settings.sandboxEnabled && !settings.sendingEnabled}
+              onChange={() => updateSetting('sandboxEnabled', !settings.sandboxEnabled)}
+            />
+          </SettingRow>
+        )}
 
         {/* MTUI Separator */}
         <div className="h-px w-full bg-grey-shade" />
 
-        {/* Sandboxes Polling */}
-        {settings.sandboxEnabled && (
+        {/* Sandboxes Polling — only for Mailtrap */}
+        {hasSandbox && settings.sandboxEnabled && (
           <SettingRow
             label="Sandboxes refresh"
             description="How often to check for new test emails"
@@ -117,10 +150,10 @@ export default function Settings() {
           </SettingRow>
         )}
 
-        {/* API/SMTP Polling */}
+        {/* Stats Polling */}
         {settings.sendingEnabled && (
           <SettingRow
-            label="API/SMTP refresh"
+            label="Stats refresh"
             description="How often to check for sending stats"
           >
             <select
