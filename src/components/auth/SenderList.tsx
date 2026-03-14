@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Port587Logo from '../ui/Port587Logo'
-import type { SenderProfilePublic } from '../../../electron/api/types'
+import VendorLogo from '../ui/vendor-logos'
+import type { SenderProfilePublic, VendorId } from '../../../electron/api/types'
 import { useAppStore } from '../../stores/appStore'
 import { Button } from '../ui/Button'
 
@@ -55,16 +56,22 @@ function SenderRow({ sender, isConnecting, isDisabled, error, onConnect, onDelet
     )
   }
 
+  const vendorId: VendorId | undefined = (sender as SenderProfilePublic & { vendor?: VendorId }).vendor
+
   return (
     <div
       className={`flex items-center gap-3 rounded-mtui border border-grey-shade bg-navy-700 px-4 py-3 ${
         isConnecting ? 'opacity-75' : ''
       } ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
     >
-      {/* Avatar */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-grey-shade text-heading-3 text-grey-muted uppercase">
-        {sender.displayName[0]}
-      </div>
+      {/* Avatar / Vendor logo */}
+      {vendorId ? (
+        <VendorLogo vendor={vendorId} className="h-8 w-8 shrink-0 rounded-[3px]" />
+      ) : (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-grey-shade text-heading-3 text-grey-muted uppercase">
+          {sender.displayName[0]}
+        </div>
+      )}
 
       {/* Name block */}
       <div className="min-w-0 flex-1">
@@ -141,7 +148,7 @@ export default function SenderList({ onAddSender }: SenderListProps) {
     try {
       const result = await window.electron.selectSender(sender.id)
       if (result.success) {
-        setAuthenticated(result.accountId, result.accountName, sender.id, sender.displayName)
+        setAuthenticated(result.accountId, result.accountName, sender.id, sender.displayName, result.vendor)
       } else {
         setRowErrors((prev) => ({ ...prev, [sender.id]: result.error }))
       }
