@@ -57,22 +57,76 @@ import {
 } from '../store'
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
 import { refreshTrayMenu } from '../tray'
+import { getConnector } from '../api/vendors'
 import { randomUUID } from 'crypto'
-import type { Account, AppSettings, SenderProfile, AddSenderResult, SelectSenderResult, DeleteSenderResult, RestoreAuthResult, SenderProfilePublic } from '../api/types'
+import type {
+  Account,
+  AppSettings,
+  SenderProfile,
+  AddSenderResult,
+  SelectSenderResult,
+  DeleteSenderResult,
+  RestoreAuthResult,
+  SenderProfilePublic,
+  VendorId,
+  VendorCapabilities,
+  EmailEvent,
+  SuppressionEntry,
+  AggregatedStats as AggregatedStatsType,
+  DailyStats as DailyStatsType,
+} from '../api/types'
+import { VENDOR_CAPABILITIES } from '../api/types'
+
+interface ActiveProfile {
+  accountId: number
+  vendor: VendorId
+  token: string
+  secondaryToken: string | undefined
+}
 
 /**
- * Wraps an IPC handler that requires authentication.
- * Resolves the accountId from the active sender profile and throws if not authenticated.
+ * Resolves and decrypts the active sender profile.
+ * Throws if no active sender or decryption fails.
+ */
+function getActiveProfile(): ActiveProfile {
+  const senderId = getLastActiveSenderId()
+  if (!senderId) throw new Error('Not authenticated')
+  const profile = getSenderById(senderId)
+  if (!profile) throw new Error('Active sender profile not found')
+  const token = decryptToken(profile.encryptedToken)
+  if (!token) throw new Error('Failed to decrypt token')
+  const secondaryToken = profile.encryptedSecondaryToken
+    ? decryptToken(profile.encryptedSecondaryToken) ?? undefined
+    : undefined
+  return {
+    accountId: profile.accountId,
+    vendor: profile.vendor,
+    token,
+    secondaryToken,
+  }
+}
+
+/**
+ * Returns a combined token string for vendor connectors.
+ * For Postmark, concatenates account + server tokens with "::" separator.
+ */
+function buildConnectorToken(profile: ActiveProfile): string {
+  if (profile.vendor === 'postmark' && profile.secondaryToken) {
+    return `${profile.token}::${profile.secondaryToken}`
+  }
+  return profile.token
+}
+
+/**
+ * Legacy withAuth — kept for sandbox:* and sending:* handlers that only need accountId.
+ * New vendor:* handlers call getActiveProfile() directly.
  */
 function withAuth<TArgs extends unknown[], TReturn>(
   handler: (accountId: number, ...args: TArgs) => Promise<TReturn> | TReturn
 ) {
   return async (_event: IpcMainInvokeEvent, ...args: TArgs): Promise<TReturn> => {
-    const activeSenderId = getLastActiveSenderId()
-    if (!activeSenderId) throw new Error('Not authenticated')
-    const sender = getSenderById(activeSenderId)
-    if (!sender) throw new Error('Active sender profile not found')
-    return handler(sender.accountId, ...args)
+    const profile = getActiveProfile()
+    return handler(profile.accountId, ...args)
   }
 }
 
@@ -129,7 +183,10 @@ export function registerIpcHandlers(): void {
       return { authenticated: false }
     }
 
-    initApiClients(token)
+    // Only initialize the Mailtrap API client for Mailtrap vendors
+    if (profile.vendor === 'mailtrap') {
+      initApiClients(token)
+    }
     startPolling()
     return {
       authenticated: true,
@@ -137,6 +194,7 @@ export function registerIpcHandlers(): void {
       accountName: profile.accountName,
       senderId: profile.id,
       senderDisplayName: profile.displayName,
+      vendor: profile.vendor,
     }
   })
 
@@ -147,7 +205,7 @@ export function registerIpcHandlers(): void {
     return profiles.map(({ encryptedToken, ...rest }) => rest)
   })
 
-  ipcMain.handle('auth:add-sender', async (_event, displayName: string, token: string): Promise<AddSenderResult> => {
+  ipcMain.handle('auth:add-sender', async (_event, vendor: VendorId, displayName: string, token: string, secondaryToken?: string): Promise<AddSenderResult> => {
     // Validate inputs
     if (!displayName || displayName.trim().length === 0) {
       return { success: false, error: 'Display name is required' }
@@ -160,45 +218,42 @@ export function registerIpcHandlers(): void {
     }
 
     try {
-      // Validate the token using a temporary client to avoid destroying the active session
-      const tempClient = axios.create({
-        baseURL: GENERAL_BASE_URL,
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 15000,
-      })
-      const response = await tempClient.get<Account[]>('/api/accounts')
-      const accounts = response.data
+      // Validate the token using the vendor connector (temporary client, no session teardown)
+      const connector = getConnector(vendor)
+      const connectorToken = vendor === 'postmark' && secondaryToken
+        ? `${token}::${secondaryToken}`
+        : token
+      const { accountId: rawAccountId, accountName } = await connector.validateToken(connectorToken)
+      const accountId = parseInt(rawAccountId, 10) || 0
 
-      if (accounts.length === 0) {
-        return { success: false, error: 'No accounts found for this API token' }
-      }
-
-      const account = accounts[0]
-
-      // Check for duplicate accountId
+      // Check for duplicate accountId within same vendor
       const existing = listSenders()
-      if (existing.some(s => s.accountId === account.id)) {
-        return { success: false, error: `Account "${account.name}" is already added` }
+      if (existing.some(s => s.accountId === accountId && s.vendor === vendor)) {
+        return { success: false, error: `Account "${accountName}" is already added` }
       }
 
       const profile: SenderProfile = {
         id: randomUUID(),
         displayName: displayName.trim(),
         encryptedToken: encryptToken(token),
-        accountId: account.id,
-        accountName: account.name,
+        encryptedSecondaryToken: secondaryToken ? encryptToken(secondaryToken) : undefined,
+        accountId,
+        accountName,
+        vendor,
         createdAt: new Date().toISOString(),
       }
 
       // Only now switch the active session
       destroyApiClients()
       clearAllCaches()
-      initApiClients(token)
+      if (vendor === 'mailtrap') {
+        initApiClients(token)
+      }
       saveSender(profile)
       setLastActiveSenderId(profile.id)
       startPolling()
 
-      return { success: true, senderId: profile.id, accountId: account.id, accountName: account.name }
+      return { success: true, senderId: profile.id, accountId, accountName, vendor }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to add sender'
       return { success: false, error: message }
@@ -217,20 +272,26 @@ export function registerIpcHandlers(): void {
     }
 
     try {
+      // Validate the token with the vendor connector before tearing down
+      const connector = getConnector(profile.vendor)
+      const secondaryToken = profile.encryptedSecondaryToken
+        ? decryptToken(profile.encryptedSecondaryToken) ?? undefined
+        : undefined
+      const connectorToken = profile.vendor === 'postmark' && secondaryToken
+        ? `${token}::${secondaryToken}`
+        : token
+      await connector.validateToken(connectorToken)
+
       destroyApiClients()
       clearAllCaches()
-      initApiClients(token)
-
-      const accounts = await getAccounts()
-      if (accounts.length === 0) {
-        destroyApiClients()
-        return { success: false, error: 'Token is no longer valid' }
+      if (profile.vendor === 'mailtrap') {
+        initApiClients(token)
       }
 
       setLastActiveSenderId(senderId)
       startPolling()
 
-      return { success: true, senderId: profile.id, accountId: profile.accountId, accountName: profile.accountName }
+      return { success: true, senderId: profile.id, accountId: profile.accountId, accountName: profile.accountName, vendor: profile.vendor }
     } catch (error: unknown) {
       destroyApiClients()
       const message = error instanceof Error ? error.message : 'Failed to select sender'
@@ -341,6 +402,74 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('sending:get-stream-summaries', withAuth(
     (accountId) => getStreamSummaries(accountId)
   ))
+
+  // ── Vendor Channels ──
+
+  ipcMain.handle('vendor:get-capabilities', (): VendorCapabilities => {
+    const senderId = getLastActiveSenderId()
+    const profile = senderId ? getSenderById(senderId) : null
+    const vendor: VendorId = profile?.vendor ?? 'mailtrap'
+    return VENDOR_CAPABILITIES[vendor]
+  })
+
+  ipcMain.handle(
+    'vendor:get-events',
+    async (_event, domainId: string | null, page: number): Promise<EmailEvent[]> => {
+      const profile = getActiveProfile()
+      const caps = VENDOR_CAPABILITIES[profile.vendor]
+      if (!caps.eventsLog) return []
+      const connector = getConnector(profile.vendor)
+      return connector.getEvents(buildConnectorToken(profile), domainId, page)
+    }
+  )
+
+  ipcMain.handle(
+    'vendor:get-suppressions',
+    async (_event): Promise<SuppressionEntry[]> => {
+      const profile = getActiveProfile()
+      const caps = VENDOR_CAPABILITIES[profile.vendor]
+      if (!caps.suppressions) return []
+      const connector = getConnector(profile.vendor)
+      return connector.getSuppressions(buildConnectorToken(profile))
+    }
+  )
+
+  ipcMain.handle(
+    'vendor:get-domains',
+    async (_event): Promise<{ id: string; name: string }[]> => {
+      const profile = getActiveProfile()
+      const connector = getConnector(profile.vendor)
+      return connector.getDomains(buildConnectorToken(profile))
+    }
+  )
+
+  ipcMain.handle(
+    'vendor:get-stats',
+    async (
+      _event,
+      startDate: string,
+      endDate: string,
+      domainId: string | null
+    ): Promise<AggregatedStatsType> => {
+      const profile = getActiveProfile()
+      const connector = getConnector(profile.vendor)
+      return connector.getAggregatedStats(buildConnectorToken(profile), startDate, endDate, domainId)
+    }
+  )
+
+  ipcMain.handle(
+    'vendor:get-daily-stats',
+    async (
+      _event,
+      startDate: string,
+      endDate: string,
+      domainId: string | null
+    ): Promise<DailyStatsType[]> => {
+      const profile = getActiveProfile()
+      const connector = getConnector(profile.vendor)
+      return connector.getDailyStats(buildConnectorToken(profile), startDate, endDate, domainId)
+    }
+  )
 
   // ── Tray Visibility ──
 
