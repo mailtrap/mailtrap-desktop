@@ -11,6 +11,9 @@ import SendingDash from './components/sending/SendingDash'
 import InboxList from './components/sandbox/InboxList'
 import InboxView from './components/sandbox/InboxView'
 import Settings from './components/settings/Settings'
+import EventsView from './components/events/EventsView'
+import SuppressionsView from './components/suppressions/SuppressionsView'
+import type { VendorId } from '../electron/api/types'
 
 function AuthenticatedApp() {
   useTrayNavigation()
@@ -60,6 +63,8 @@ function AuthenticatedApp() {
           {sendingEnabled && <Route path="/sending/:domainId" element={<SendingDash />} />}
           {sandboxEnabled && <Route path="/sandbox" element={<InboxList />} />}
           {sandboxEnabled && <Route path="/sandbox/inbox/:inboxId" element={<InboxView />} />}
+          <Route path="/events" element={<EventsView />} />
+          <Route path="/suppressions" element={<SuppressionsView />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to={defaultRoute} replace />} />
         </Routes>
@@ -83,7 +88,7 @@ export default function App() {
   useEffect(() => {
     window.electron.restoreAuth().then((result) => {
       if (result.authenticated) {
-        setAuthenticated(result.accountId, result.accountName, result.senderId, result.senderDisplayName)
+        setAuthenticated(result.accountId, result.accountName, result.senderId, result.senderDisplayName, result.vendor)
       } else {
         setUnauthenticated()
       }
@@ -111,8 +116,8 @@ export default function App() {
           ) : authView === 'add' ? (
             <AddSender
               onBack={() => setAuthView('list')}
-              onSuccess={(accountId, accountName, senderId, displayName) => {
-                setAuthenticated(accountId, accountName, senderId, displayName)
+              onSuccess={(accountId, accountName, senderId, displayName, vendor) => {
+                setAuthenticated(accountId, accountName, senderId, displayName, vendor)
               }}
             />
           ) : (

@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
 import Port587Logo from '../ui/Port587Logo'
+import VendorLogo from '../ui/vendor-logos'
+import { useAppStore } from '../../stores/appStore'
 import iconPng from '../../../resources/icon.png'
+import type { VendorCapabilities } from '../../../electron/api/types'
 
 function SandboxesIcon() {
   return (
@@ -28,6 +31,28 @@ function SettingsIcon() {
   )
 }
 
+function EventsIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M2 3h12M2 6.5h12M2 10h8M2 13.5h6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function SuppressionsIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3.75 12.25l8.5-8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function CollapseIcon({ collapsed }: { collapsed: boolean }) {
   return (
     <svg
@@ -46,56 +71,83 @@ interface NavItem {
   to: string
   icon: React.ReactNode
   settingsKey?: 'sendingEnabled' | 'sandboxEnabled'
+  capability?: keyof VendorCapabilities
 }
 
 const allNavItems: NavItem[] = [
   {
-    label: 'API/SMTP',
+    label: 'Stats',
     to: '/sending',
     icon: <SendingIcon />,
-    settingsKey: 'sendingEnabled'
+    settingsKey: 'sendingEnabled',
+    capability: 'sendingStats',
   },
   {
     label: 'Sandboxes',
     to: '/sandbox',
     icon: <SandboxesIcon />,
-    settingsKey: 'sandboxEnabled'
+    settingsKey: 'sandboxEnabled',
+    capability: 'sandbox',
+  },
+  {
+    label: 'Events',
+    to: '/events',
+    icon: <EventsIcon />,
+    capability: 'eventsLog',
+  },
+  {
+    label: 'Suppressions',
+    to: '/suppressions',
+    icon: <SuppressionsIcon />,
+    capability: 'suppressions',
   },
   {
     label: 'Settings',
     to: '/settings',
-    icon: <SettingsIcon />
-  }
+    icon: <SettingsIcon />,
+  },
 ]
 
 export default function Sidebar() {
   const [navItems, setNavItems] = useState<NavItem[]>([])
   const [collapsed, setCollapsed] = useState(false)
+  const [capabilities, setCapabilities] = useState<VendorCapabilities | null>(null)
+  const vendor = useAppStore((s) => s.vendor)
 
   useEffect(() => {
-    window.electron.getSettings().then((s) => {
+    // Fetch capabilities once and cache in component state (PERF_NOTES #7)
+    window.electron.getCapabilities().then((caps) => {
+      setCapabilities(caps)
+    })
+  }, [vendor])
+
+  useEffect(() => {
+    const filterItems = async () => {
+      const [settings, caps] = await Promise.all([
+        window.electron.getSettings(),
+        capabilities ? Promise.resolve(capabilities) : window.electron.getCapabilities(),
+      ])
+
       setNavItems(
         allNavItems.filter((item) => {
-          if (!item.settingsKey) return true
-          return s[item.settingsKey] !== false
+          // Check settings toggle
+          if (item.settingsKey && settings[item.settingsKey] === false) return false
+          // Check vendor capability
+          if (item.capability && caps[item.capability] !== true) return false
+          return true
         })
       )
-    })
+    }
+
+    filterItems()
 
     const cleanup = window.electron.onNavigate((route) => {
       if (route === '__settings_changed') {
-        window.electron.getSettings().then((s) => {
-          setNavItems(
-            allNavItems.filter((item) => {
-              if (!item.settingsKey) return true
-              return s[item.settingsKey] !== false
-            })
-          )
-        })
+        filterItems()
       }
     })
     return cleanup
-  }, [])
+  }, [capabilities])
 
   return (
     <aside
@@ -109,9 +161,16 @@ export default function Sidebar() {
       {/* Logo */}
       <div className={`pb-4 pt-2 ${collapsed ? 'flex justify-center px-2' : 'px-4'}`}>
         {collapsed ? (
-          <img src={iconPng} alt="Port587" className="h-10 w-10 rounded-lg" />
+          <div className="relative">
+            <img src={iconPng} alt="Port587" className="h-10 w-10 rounded-lg" />
+            {vendor && (
+              <div className="absolute bottom-0 right-0 ring-1 ring-navy-void rounded-[2px]">
+                <VendorLogo vendor={vendor} className="h-4 w-4" />
+              </div>
+            )}
+          </div>
         ) : (
-          <Port587Logo />
+          <Port587Logo vendor={vendor} />
         )}
       </div>
 
