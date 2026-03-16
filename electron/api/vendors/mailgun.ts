@@ -92,7 +92,7 @@ export const mailgunConnector: VendorConnector = {
       return fetchDomainStats(client, domainId, startDate, endDate)
     }
 
-    // Account-wide: iterate all domains, sum. Cap at 10 domains.
+    // Account-wide: iterate all domains, sum raw counts. Cap at 10 domains.
     const domains = await this.getDomains(token)
     if (domains.length === 0) {
       return emptyStats()
@@ -100,20 +100,20 @@ export const mailgunConnector: VendorConnector = {
 
     const capped = domains.slice(0, 10)
     // Concurrency limit: batches of 3
-    const allStats: AggregatedStats[] = []
+    const allCounts: DomainRawCounts[] = []
     for (let i = 0; i < capped.length; i += 3) {
       const batch = capped.slice(i, i + 3)
       const batchResults = await Promise.allSettled(
-        batch.map(d => fetchDomainStats(client, d.id, startDate, endDate))
+        batch.map(d => fetchDomainRawCounts(client, d.id, startDate, endDate))
       )
       for (const r of batchResults) {
         if (r.status === 'fulfilled') {
-          allStats.push(r.value)
+          allCounts.push(r.value)
         }
       }
     }
 
-    return sumStats(allStats)
+    return sumRawCounts(allCounts)
   },
 
   async getDailyStats(
@@ -266,12 +266,22 @@ async function getFirstDomain(token: string): Promise<string | null> {
   return null
 }
 
-async function fetchDomainStats(
+/** Raw counts from a single domain, including accepted for rate calculation. */
+interface DomainRawCounts {
+  accepted: number
+  delivered: number
+  bounced: number
+  opened: number
+  clicked: number
+  spam: number
+}
+
+async function fetchDomainRawCounts(
   client: AxiosInstance,
   domain: string,
   startDate: string,
   endDate: string
-): Promise<AggregatedStats> {
+): Promise<DomainRawCounts> {
   const duration = `${daysBetween(startDate, endDate)}d`
 
   try {
@@ -282,7 +292,9 @@ async function fetchDomainStats(
       },
     })
 
-    if (!data?.stats || !Array.isArray(data.stats)) return emptyStats()
+    if (!data?.stats || !Array.isArray(data.stats)) {
+      return { accepted: 0, delivered: 0, bounced: 0, opened: 0, clicked: 0, spam: 0 }
+    }
 
     let accepted = 0, delivered = 0, bounced = 0,
       opened = 0, clicked = 0, spam = 0
@@ -296,24 +308,38 @@ async function fetchDomainStats(
       spam += item.complained?.total ?? 0
     }
 
-    return {
-      delivery_count: delivered,
-      delivery_rate: safeRate(delivered, accepted),
-      bounce_count: bounced,
-      bounce_rate: safeRate(bounced, accepted),
-      open_count: opened,
-      open_rate: safeRate(opened, delivered),
-      click_count: clicked,
-      click_rate: safeRate(clicked, delivered),
-      spam_count: spam,
-      spam_rate: safeRate(spam, delivered),
-    }
+    return { accepted, delivered, bounced, opened, clicked, spam }
   } catch (err: unknown) {
     if (axios.isAxiosError(err) && err.response?.status === 429) {
       throw new Error('Rate limit exceeded (429). Please try again later.')
     }
     throw err
   }
+}
+
+function rawCountsToStats(counts: DomainRawCounts): AggregatedStats {
+  return {
+    delivery_count: counts.delivered,
+    delivery_rate: safeRate(counts.delivered, counts.accepted),
+    bounce_count: counts.bounced,
+    bounce_rate: safeRate(counts.bounced, counts.accepted),
+    open_count: counts.opened,
+    open_rate: safeRate(counts.opened, counts.delivered),
+    click_count: counts.clicked,
+    click_rate: safeRate(counts.clicked, counts.delivered),
+    spam_count: counts.spam,
+    spam_rate: safeRate(counts.spam, counts.delivered),
+  }
+}
+
+async function fetchDomainStats(
+  client: AxiosInstance,
+  domain: string,
+  startDate: string,
+  endDate: string
+): Promise<AggregatedStats> {
+  const counts = await fetchDomainRawCounts(client, domain, startDate, endDate)
+  return rawCountsToStats(counts)
 }
 
 function emptyStats(): AggregatedStats {
@@ -326,31 +352,20 @@ function emptyStats(): AggregatedStats {
   }
 }
 
-function sumStats(arr: AggregatedStats[]): AggregatedStats {
+function sumRawCounts(arr: DomainRawCounts[]): AggregatedStats {
   if (arr.length === 0) return emptyStats()
 
   const totals = arr.reduce(
-    (acc, s) => ({
-      delivery_count: acc.delivery_count + s.delivery_count,
-      bounce_count: acc.bounce_count + s.bounce_count,
-      open_count: acc.open_count + s.open_count,
-      click_count: acc.click_count + s.click_count,
-      spam_count: acc.spam_count + s.spam_count,
-      sent: acc.sent + s.delivery_count + s.bounce_count,
+    (acc, c) => ({
+      accepted: acc.accepted + c.accepted,
+      delivered: acc.delivered + c.delivered,
+      bounced: acc.bounced + c.bounced,
+      opened: acc.opened + c.opened,
+      clicked: acc.clicked + c.clicked,
+      spam: acc.spam + c.spam,
     }),
-    { delivery_count: 0, bounce_count: 0, open_count: 0, click_count: 0, spam_count: 0, sent: 0 }
+    { accepted: 0, delivered: 0, bounced: 0, opened: 0, clicked: 0, spam: 0 }
   )
 
-  return {
-    delivery_count: totals.delivery_count,
-    delivery_rate: safeRate(totals.delivery_count, totals.sent),
-    bounce_count: totals.bounce_count,
-    bounce_rate: safeRate(totals.bounce_count, totals.sent),
-    open_count: totals.open_count,
-    open_rate: safeRate(totals.open_count, totals.delivery_count),
-    click_count: totals.click_count,
-    click_rate: safeRate(totals.click_count, totals.delivery_count),
-    spam_count: totals.spam_count,
-    spam_rate: safeRate(totals.spam_count, totals.delivery_count),
-  }
+  return rawCountsToStats(totals)
 }

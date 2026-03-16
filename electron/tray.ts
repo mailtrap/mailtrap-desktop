@@ -113,7 +113,8 @@ export function createTray(mainWindow: BrowserWindow): void {
 let mainWindowRef: BrowserWindow | null = null
 
 // ── Debounced updateTrayData ──
-// Collapses multiple calls within 500ms into a single tray rebuild.
+// Collapses multiple calls within 100ms into a single tray rebuild.
+// Kept short to avoid noticeably stale menu state while still batching rapid-fire updates.
 let trayDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 export function updateTrayData(
@@ -126,7 +127,7 @@ export function updateTrayData(
   trayDebounceTimer = setTimeout(() => {
     if (mainWindowRef) rebuildTrayMenu(mainWindowRef)
     trayDebounceTimer = null
-  }, 500)
+  }, 100)
 }
 
 export function refreshTrayMenu(): void {

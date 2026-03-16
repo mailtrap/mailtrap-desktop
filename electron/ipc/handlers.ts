@@ -58,7 +58,7 @@ import {
 import { startPolling, stopPolling, restartTestingPolling, restartSendingPolling, stopTestingPolling, stopSendingPolling } from '../polling'
 import { refreshTrayMenu } from '../tray'
 import { getConnector } from '../api/vendors'
-import { randomUUID } from 'crypto'
+import { randomUUID, createHash } from 'crypto'
 import type {
   Account,
   AppSettings,
@@ -76,6 +76,23 @@ import type {
   DailyStats as DailyStatsType,
 } from '../api/types'
 import { VENDOR_CAPABILITIES } from '../api/types'
+
+/**
+ * Converts a vendor accountId string to a stable numeric value.
+ * Mailtrap returns numeric IDs (e.g. "12345") which are parsed directly.
+ * Other vendors return prefixed strings (e.g. "mailgun_abc123") which are
+ * hashed to a deterministic positive integer so duplicate detection works.
+ */
+function toNumericAccountId(rawAccountId: string): number {
+  const parsed = Number(rawAccountId)
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return Math.floor(parsed)
+  }
+  // Hash string-based IDs to a stable positive 32-bit integer
+  const hash = createHash('sha256').update(rawAccountId).digest()
+  // Read first 4 bytes as unsigned 32-bit integer, ensure positive
+  return hash.readUInt32BE(0)
+}
 
 interface ActiveProfile {
   accountId: number
@@ -224,7 +241,7 @@ export function registerIpcHandlers(): void {
         ? `${token}::${secondaryToken}`
         : token
       const { accountId: rawAccountId, accountName } = await connector.validateToken(connectorToken)
-      const accountId = parseInt(rawAccountId, 10) || 0
+      const accountId = toNumericAccountId(rawAccountId)
 
       // Check for duplicate accountId within same vendor
       const existing = listSenders()
