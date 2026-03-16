@@ -45,7 +45,12 @@ export default function SuppressionsView() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    window.electron.getCapabilities().then(setCapabilities)
+    window.electron.getCapabilities()
+      .then(setCapabilities)
+      .catch(() => {
+        setError('Failed to load capabilities')
+        setLoading(false)
+      })
   }, [])
 
   useEffect(() => {

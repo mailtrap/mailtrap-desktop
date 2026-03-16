@@ -123,6 +123,25 @@ export default function SendingDash() {
   const [categoryRows, setCategoryRows] = useState<StatsRow[]>([])
 
   const refreshRef = useRef<() => void>(() => {})
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Reset state when vendor (account) changes
+  useEffect(() => {
+    // Clear any pending rate-limit retry
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
+    }
+    setSelectedDomainId(undefined)
+    setStats(null)
+    setDailyStats([])
+    setProviderRows([])
+    setCategoryRows([])
+    setStatsError(null)
+    setLastFetchedAt(null)
+    setIsFromCache(false)
+    setRateLimited(false)
+  }, [vendor])
 
   // Default to "All Domains" once domains load
   useEffect(() => {
@@ -133,6 +152,11 @@ export default function SendingDash() {
 
   useEffect(() => {
     if (selectedDomainId !== undefined) {
+      // Clear any pending rate-limit retry when selection changes
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current)
+        retryTimeoutRef.current = null
+      }
       loadCacheThenFetchStats(selectedDomainId, timeRange)
     }
   }, [selectedDomainId, timeRange])
@@ -212,11 +236,11 @@ export default function SendingDash() {
             .catch(() => ({ ok: false as const, data: [] as CategoryStats[] }))
         ])
 
-        // Provider & Category tables
-        if (providerResult.ok && providerResult.data.length > 0) {
+        // Provider & Category tables — always update, even if empty
+        if (providerResult.ok) {
           setProviderRows(providerResult.data.map(toStatsRow))
         }
-        if (categoryResult.ok && categoryResult.data.length > 0) {
+        if (categoryResult.ok) {
           setCategoryRows(
             categoryResult.data
               .filter((c) => c.category !== '')
@@ -295,7 +319,13 @@ export default function SendingDash() {
 
     if (isRateLimit) {
       setRateLimited(true)
-      setTimeout(() => fetchFreshStats(domainId, range), 60000)
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current)
+      }
+      retryTimeoutRef.current = setTimeout(() => {
+        retryTimeoutRef.current = null
+        fetchFreshStats(domainId, range)
+      }, 60000)
     }
 
     if (!hasDisplayedData && !isRateLimit) {

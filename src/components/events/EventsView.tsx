@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { Button } from '../ui/Button'
 import type { EmailEvent, VendorCapabilities } from '../../../electron/api/types'
 
-type TimeRange = '7d' | '30d'
-
 function eventColor(event: string): string {
   const lower = event.toLowerCase()
   if (lower === 'delivered' || lower === 'sent') return 'text-green-medium'
@@ -39,17 +37,21 @@ export default function EventsView() {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const [timeRange, setTimeRange] = useState<TimeRange>('7d')
 
   useEffect(() => {
-    window.electron.getCapabilities().then(setCapabilities)
+    window.electron.getCapabilities()
+      .then(setCapabilities)
+      .catch(() => {
+        setError('Failed to load capabilities')
+        setLoading(false)
+      })
   }, [])
 
   useEffect(() => {
     if (capabilities && capabilities.eventsLog) {
       loadEvents(true)
     }
-  }, [capabilities, timeRange])
+  }, [capabilities])
 
   const loadEvents = async (reset: boolean) => {
     const nextPage = reset ? 1 : page + 1
@@ -119,26 +121,9 @@ export default function EventsView() {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-heading-1 text-navy-air">Activity</h1>
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-mtui border border-grey-dark">
-            {(['7d', '30d'] as TimeRange[]).map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`px-3 py-1.5 text-item-label-s transition-colors ${
-                  timeRange === range
-                    ? 'bg-blue-400/15 text-blue-neutral'
-                    : 'text-grey-muted hover:text-navy-air'
-                }`}
-              >
-                {range === '7d' ? '7 days' : '30 days'}
-              </button>
-            ))}
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => loadEvents(true)}>
-            Refresh
-          </Button>
-        </div>
+        <Button variant="ghost" size="sm" onClick={() => loadEvents(true)}>
+          Refresh
+        </Button>
       </div>
 
       {events.length === 0 ? (
