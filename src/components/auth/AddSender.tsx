@@ -141,23 +141,11 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
   return (
     <div className="flex h-full items-center justify-center p-8">
       <div className="w-full max-w-md">
-        {/* Back link */}
-        <button
-          type="button"
-          onClick={handleBackToStep1}
-          disabled={loading}
-          className="mb-4 flex items-center gap-1 text-body text-blue-neutral hover:text-blue-medium transition-colors"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Back
-        </button>
 
-        {/* Logo composition: Port587 icon + Vendor logo */}
-        <div className="mb-6 flex items-center justify-center gap-3">
-          <img src={iconPng} alt="Port587" className="h-[50px] w-[50px] rounded-lg" />
-          <VendorLogo vendor={selectedVendor} className="h-7 w-7 rounded-[4px]" />
+        {/* Vendor logo + name */}
+        <div className="mb-6 flex items-center justify-center gap-2">
+          <VendorLogo vendor={selectedVendor} className="h-10 w-10 rounded-lg" />
+          <span className="text-lg font-semibold text-white">{config.displayName}</span>
         </div>
 
         {/* Description */}

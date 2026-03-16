@@ -13,13 +13,11 @@ const SendGridLogo = React.memo(function SendGridLogo({ className = 'h-5 w-5' }:
       xmlns="http://www.w3.org/2000/svg"
       aria-label="SendGrid"
     >
-      <rect width="32" height="32" rx="6" fill="#1A82E2" />
-      <rect x="6" y="6" width="8" height="8" rx="1" fill="#fff" opacity="0.9" />
-      <rect x="14" y="6" width="8" height="8" rx="1" fill="#fff" opacity="0.5" />
-      <rect x="14" y="14" width="8" height="8" rx="1" fill="#fff" opacity="0.9" />
-      <rect x="22" y="14" width="4" height="8" rx="1" fill="#fff" opacity="0.5" />
-      <rect x="6" y="14" width="8" height="4" rx="1" fill="#fff" opacity="0.5" />
-      <rect x="14" y="22" width="8" height="4" rx="1" fill="#fff" opacity="0.5" />
+      <rect width="32" height="32" rx="7" fill="#1A82E2" />
+      <path
+        d="M5.87 25.33h9.07c.59 0 1.07-.48 1.07-1.07v-3.2c0-.59-.48-1.07-1.07-1.07H10.4c-.59 0-1.07-.48-1.07-1.07v-4.53c0-.59-.48-1.07-1.07-1.07H5.07c-.59 0-1.07.48-1.07 1.07v9.87c0 .37.3.67.67.67h1.2zM26.13 6.67h-9.07c-.59 0-1.07.48-1.07 1.07v3.2c0 .59.48 1.07 1.07 1.07h4.53c.59 0 1.07.48 1.07 1.07v4.53c0 .59.48 1.07 1.07 1.07h3.2c.59 0 1.07-.48 1.07-1.07V7.47c0-.37-.3-.67-.67-.67h-1.2z"
+        fill="#fff"
+      />
     </svg>
   )
 })

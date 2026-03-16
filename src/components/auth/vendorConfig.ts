@@ -59,11 +59,7 @@ export const VENDOR_CONFIGS: Record<VendorId, VendorFormConfig> = {
   },
 }
 
-/** Ordered list of vendors for the service picker. */
+/** Ordered list of vendors shown in the service picker. */
 export const VENDOR_LIST: VendorId[] = [
   'mailtrap',
-  'sendgrid',
-  'mailgun',
-  'postmark',
-  'mailersend',
 ]

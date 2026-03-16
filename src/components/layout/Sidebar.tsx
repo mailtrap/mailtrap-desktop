@@ -6,6 +6,7 @@ import VendorLogo from '../ui/vendor-logos'
 import { useAppStore } from '../../stores/appStore'
 import iconPng from '../../../resources/icon.png'
 import type { VendorCapabilities } from '../../../electron/api/types'
+import { VENDOR_DISPLAY_NAMES } from '../../../electron/api/types'
 
 function SandboxesIcon() {
   return (
@@ -158,19 +159,51 @@ export default function Sidebar() {
       {/* Spacer for title bar drag area */}
       <div className="h-4 shrink-0" />
 
-      {/* Logo */}
-      <div className={`pb-4 pt-2 ${collapsed ? 'flex justify-center px-2' : 'px-4'}`}>
-        {collapsed ? (
-          <div className="relative">
-            <img src={iconPng} alt="Port587" className="h-10 w-10 rounded-lg" />
-            {vendor && (
-              <div className="absolute bottom-0 right-0 ring-1 ring-navy-void rounded-[2px]">
-                <VendorLogo vendor={vendor} className="h-4 w-4" />
+      {/* Logo + Collapse toggle */}
+      <div className={`pb-4 pt-2 ${collapsed ? 'flex justify-center px-2' : 'flex items-center justify-between px-4'}`}>
+        {vendor ? (
+          collapsed ? (
+            <button onClick={() => setCollapsed(false)} className="no-drag" title="Expand sidebar">
+              <VendorLogo vendor={vendor} className="h-10 w-10 rounded-lg" />
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 min-w-0">
+                <VendorLogo vendor={vendor} className="h-10 w-10 shrink-0 rounded-lg" />
+                <span className="text-lg font-semibold text-white truncate">{VENDOR_DISPLAY_NAMES[vendor]}</span>
               </div>
-            )}
-          </div>
+              <button
+                onClick={() => setCollapsed(true)}
+                className="no-drag shrink-0 rounded-mtui p-1 text-grey-muted transition-colors hover:text-white"
+                title="Collapse sidebar"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M6 2v12" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </button>
+            </>
+          )
         ) : (
-          <Port587Logo vendor={vendor} />
+          collapsed ? (
+            <button onClick={() => setCollapsed(false)} className="no-drag" title="Expand sidebar">
+              <img src={iconPng} alt="Port587" className="h-10 w-10 rounded-lg" />
+            </button>
+          ) : (
+            <>
+              <Port587Logo />
+              <button
+                onClick={() => setCollapsed(true)}
+                className="no-drag shrink-0 rounded-mtui p-1 text-grey-muted transition-colors hover:text-white"
+                title="Collapse sidebar"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M6 2v12" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </button>
+            </>
+          )
         )}
       </div>
 
@@ -197,17 +230,26 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Collapse toggle */}
-      <div className="mt-auto pb-4">
+      {/* Bottom actions */}
+      <div className="mt-auto space-y-0.5 px-2 pb-4">
+        {/* Accounts */}
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={`no-drag flex w-full items-center rounded-mtui text-grey-muted transition-colors hover:text-white ${
-            collapsed ? 'justify-center px-0 py-2' : 'gap-3 px-5 py-1.5'
+          onClick={() => {
+            window.electron.logout().then(() => {
+              useAppStore.getState().setUnauthenticated()
+            })
+          }}
+          title={collapsed ? 'Accounts' : undefined}
+          className={`no-drag flex w-full items-center rounded-mtui text-grey-muted transition-colors hover:bg-grey-shade hover:text-white ${
+            collapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-1.5'
           }`}
         >
-          <CollapseIcon collapsed={collapsed} />
-          {!collapsed && <span className="text-nav-item">Hide</span>}
+          <svg className="h-4 w-4 shrink-0" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 14c0-2.21 2.69-4 6-4s6 1.79 6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {!collapsed && <span className="text-nav-item">Accounts</span>}
         </button>
+
       </div>
     </aside>
   )

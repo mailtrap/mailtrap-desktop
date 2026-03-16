@@ -51,9 +51,14 @@ export default function Settings() {
   }
 
   const handleLogout = async () => {
+    const senderId = useAppStore.getState().senderId
     setLoggingOut(true)
     try {
-      await window.electron.logout()
+      if (senderId) {
+        await window.electron.deleteSender(senderId)
+      } else {
+        await window.electron.logout()
+      }
       setUnauthenticated()
     } finally {
       setLoggingOut(false)

@@ -90,7 +90,7 @@ function SenderRow({ sender, isConnecting, isDisabled, error, onConnect, onDelet
           loading={isConnecting}
           onClick={onConnect}
         >
-          {isConnecting ? 'Logging in...' : 'Log In'}
+          {isConnecting ? 'Opening...' : 'Open'}
         </Button>
         <button
           className={`flex h-7 w-7 items-center justify-center rounded-mtui text-grey-muted hover:text-red-medium hover:bg-grey-shade transition-colors ${
