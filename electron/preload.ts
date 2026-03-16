@@ -18,6 +18,10 @@ import type {
   SelectSenderResult,
   DeleteSenderResult,
   RestoreAuthResult,
+  VendorId,
+  VendorCapabilities,
+  EmailEvent,
+  SuppressionEntry,
 } from './api/types'
 
 export interface ElectronAPI {
@@ -28,11 +32,21 @@ export interface ElectronAPI {
 
   // Sender Profiles
   listSenders: () => Promise<SenderProfilePublic[]>
-  addSender: (displayName: string, token: string) => Promise<AddSenderResult>
+  addSender: (vendor: VendorId, displayName: string, token: string, secondaryToken?: string) => Promise<AddSenderResult>
   selectSender: (senderId: string) => Promise<SelectSenderResult>
   deleteSender: (senderId: string) => Promise<DeleteSenderResult>
 
-  // Sandbox
+  // Vendor capabilities
+  getCapabilities: () => Promise<VendorCapabilities>
+
+  // Vendor-agnostic data
+  getVendorDomains: () => Promise<{ id: string; name: string }[]>
+  getVendorStats: (startDate: string, endDate: string, domainId: string | null) => Promise<AggregatedStats>
+  getVendorDailyStats: (startDate: string, endDate: string, domainId: string | null) => Promise<DailyStats[]>
+  getEvents: (domainId: string | null, page: number) => Promise<EmailEvent[]>
+  getSuppressions: () => Promise<SuppressionEntry[]>
+
+  // Sandbox (Mailtrap-only)
   getProjects: () => Promise<unknown[]>
   getInboxes: (projectId: number) => Promise<unknown[]>
   getInboxSummaries: () => Promise<InboxSummary[]>
@@ -43,12 +57,12 @@ export interface ElectronAPI {
   getSpamReport: (inboxId: number, messageId: number) => Promise<unknown>
   getHtmlAnalysis: (inboxId: number, messageId: number) => Promise<unknown>
 
-  // Tray visibility
+  // Tray visibility (Mailtrap-only)
   getHiddenTrayInboxIds: () => Promise<number[]>
   setInboxTrayVisibility: (inboxId: number, visible: boolean) => Promise<{ success: boolean }>
   setTrayVisibilityBatch: (entries: { inboxId: number; visible: boolean }[]) => Promise<{ success: boolean }>
 
-  // Sending
+  // Sending (Mailtrap-only legacy — kept for backward compat)
   getDomains: () => Promise<SendingDomain[]>
   getStats: (startDate: string, endDate: string, domainIds?: number[]) => Promise<AggregatedStats>
   getDailyStats: (startDate: string, endDate: string, domainIds?: number[]) => Promise<DailyStats[]>
@@ -92,9 +106,22 @@ const api: ElectronAPI = {
 
   // Sender Profiles
   listSenders: () => ipcRenderer.invoke('auth:list-senders'),
-  addSender: (displayName, token) => ipcRenderer.invoke('auth:add-sender', displayName, token),
+  addSender: (vendor, displayName, token, secondaryToken) =>
+    ipcRenderer.invoke('auth:add-sender', vendor, displayName, token, secondaryToken),
   selectSender: (senderId) => ipcRenderer.invoke('auth:select-sender', senderId),
   deleteSender: (senderId) => ipcRenderer.invoke('auth:delete-sender', senderId),
+
+  // Vendor capabilities
+  getCapabilities: () => ipcRenderer.invoke('vendor:get-capabilities'),
+
+  // Vendor-agnostic data
+  getVendorDomains: () => ipcRenderer.invoke('vendor:get-domains'),
+  getVendorStats: (startDate, endDate, domainId) =>
+    ipcRenderer.invoke('vendor:get-stats', startDate, endDate, domainId),
+  getVendorDailyStats: (startDate, endDate, domainId) =>
+    ipcRenderer.invoke('vendor:get-daily-stats', startDate, endDate, domainId),
+  getEvents: (domainId, page) => ipcRenderer.invoke('vendor:get-events', domainId, page),
+  getSuppressions: () => ipcRenderer.invoke('vendor:get-suppressions'),
 
   // Sandbox
   getProjects: () => ipcRenderer.invoke('sandbox:get-projects'),
@@ -112,7 +139,7 @@ const api: ElectronAPI = {
   setInboxTrayVisibility: (inboxId, visible) => ipcRenderer.invoke('sandbox:set-tray-visibility', inboxId, visible),
   setTrayVisibilityBatch: (entries) => ipcRenderer.invoke('sandbox:set-tray-visibility-batch', entries),
 
-  // Sending
+  // Sending (Mailtrap-only legacy)
   getDomains: () => ipcRenderer.invoke('sending:get-domains'),
   getStats: (startDate, endDate, domainIds) => ipcRenderer.invoke('sending:get-stats', startDate, endDate, domainIds),
   getDailyStats: (startDate, endDate, domainIds) => ipcRenderer.invoke('sending:get-daily-stats', startDate, endDate, domainIds),

@@ -1,3 +1,131 @@
+// ── Vendor ──
+
+export type VendorId =
+  | 'mailtrap'
+  | 'sendgrid'
+  | 'mailgun'
+  | 'postmark'
+  | 'mailersend'
+
+export interface VendorCapabilities {
+  vendor: VendorId
+  sendingStats: boolean
+  dailyStats: boolean
+  domainFilter: boolean
+  categoryStats: boolean
+  providerStats: boolean
+  sandbox: boolean
+  eventsLog: boolean
+  suppressions: boolean
+}
+
+export const VENDOR_CAPABILITIES: Record<VendorId, VendorCapabilities> = {
+  mailtrap: {
+    vendor: 'mailtrap',
+    sendingStats: true,
+    dailyStats: true,
+    domainFilter: true,
+    categoryStats: true,
+    providerStats: true,
+    sandbox: true,
+    eventsLog: false,
+    suppressions: false,
+  },
+  sendgrid: {
+    vendor: 'sendgrid',
+    sendingStats: true,
+    dailyStats: true,
+    domainFilter: true,
+    categoryStats: false,
+    providerStats: false,
+    sandbox: false,
+    eventsLog: true,
+    suppressions: true,
+  },
+  mailgun: {
+    vendor: 'mailgun',
+    sendingStats: true,
+    dailyStats: true,
+    domainFilter: true,
+    categoryStats: false,
+    providerStats: false,
+    sandbox: false,
+    eventsLog: true,
+    suppressions: true,
+  },
+  postmark: {
+    vendor: 'postmark',
+    sendingStats: true,
+    dailyStats: true,
+    domainFilter: true,
+    categoryStats: false,
+    providerStats: false,
+    sandbox: false,
+    eventsLog: true,
+    suppressions: false,
+  },
+  mailersend: {
+    vendor: 'mailersend',
+    sendingStats: true,
+    dailyStats: true,
+    domainFilter: true,
+    categoryStats: false,
+    providerStats: false,
+    sandbox: false,
+    eventsLog: true,
+    suppressions: false,
+  },
+}
+
+export const VENDOR_DISPLAY_NAMES: Record<VendorId, string> = {
+  mailtrap: 'Mailtrap',
+  sendgrid: 'SendGrid',
+  mailgun: 'Mailgun',
+  postmark: 'Postmark',
+  mailersend: 'MailerSend',
+}
+
+// ── Vendor Connector Interface ──
+
+export interface EmailEvent {
+  id: string
+  timestamp: string       // ISO 8601
+  event: string           // e.g. 'delivered', 'bounce', 'open', 'click', 'spam'
+  recipient: string       // email address
+  subject?: string
+  messageId?: string
+  errorMessage?: string   // populated for bounce events
+}
+
+export interface SuppressionEntry {
+  email: string
+  reason: string          // 'bounce' | 'unsubscribe' | 'spam_report' (normalized)
+  createdAt: string       // ISO 8601
+}
+
+export interface VendorConnector {
+  validateToken(token: string): Promise<{ accountId: string; accountName: string }>
+  getDomains(token: string): Promise<{ id: string; name: string }[]>
+  getAggregatedStats(
+    token: string,
+    startDate: string,
+    endDate: string,
+    domainId: string | null
+  ): Promise<AggregatedStats>
+  getDailyStats(
+    token: string,
+    startDate: string,
+    endDate: string,
+    domainId: string | null
+  ): Promise<DailyStats[]>
+  getEvents(
+    token: string,
+    domainId: string | null,
+    page: number
+  ): Promise<EmailEvent[]>
+  getSuppressions(token: string): Promise<SuppressionEntry[]>
+}
+
 // ── Account ──
 
 export interface Account {
@@ -228,19 +356,21 @@ export interface SenderProfile {
   id: string
   displayName: string
   encryptedToken: string
+  encryptedSecondaryToken?: string  // Postmark server token only
   accountId: number
   accountName: string
+  vendor: VendorId                  // required; migrated to 'mailtrap' if absent
   createdAt: string
 }
 
 export type SenderProfilePublic = Omit<SenderProfile, 'encryptedToken'>
 
 export type AddSenderResult =
-  | { success: true; senderId: string; accountId: number; accountName: string }
+  | { success: true; senderId: string; accountId: number; accountName: string; vendor: VendorId }
   | { success: false; error: string }
 
 export type SelectSenderResult =
-  | { success: true; senderId: string; accountId: number; accountName: string }
+  | { success: true; senderId: string; accountId: number; accountName: string; vendor: VendorId }
   | { success: false; error: string }
 
 export type DeleteSenderResult =
@@ -248,7 +378,7 @@ export type DeleteSenderResult =
   | { success: false; error: string }
 
 export type RestoreAuthResult =
-  | { authenticated: true; accountId: number; accountName?: string; senderId: string; senderDisplayName: string }
+  | { authenticated: true; accountId: number; accountName?: string; senderId: string; senderDisplayName: string; vendor: VendorId }
   | { authenticated: false }
 
 // ── Settings ──

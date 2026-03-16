@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mkdtempSync, writeFileSync, readFileSync, existsSync } from 'fs'
+import { mkdtempSync, writeFileSync, readFileSync, existsSync, unlinkSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
 // We need to mock electron modules before importing the store
-const mockStorePath = join(mkdtempSync(join(tmpdir(), 'store-test-')), 'mailtrap-store.json')
+const mockStoreDir = mkdtempSync(join(tmpdir(), 'store-test-'))
+const mockStorePath = join(mockStoreDir, 'port587-store.json')
 
 vi.mock('electron', () => ({
   app: {
-    getPath: () => join(mockStorePath, '..')
+    getPath: () => mockStoreDir
   },
   safeStorage: {
     isEncryptionAvailable: () => true,
@@ -47,11 +48,12 @@ import { DEFAULT_SETTINGS } from '../api/types'
 
 beforeEach(() => {
   clearStoreCache()
-  // Reset the store between tests by deleting the file
+  // Reset the store between tests by overwriting the file with defaults
   try {
-    if (existsSync(mockStorePath)) {
-      writeFileSync(mockStorePath, JSON.stringify({ settings: { ...DEFAULT_SETTINGS } }))
-    }
+    writeFileSync(mockStorePath, JSON.stringify({ settings: { ...DEFAULT_SETTINGS } }))
+    // Remove legacy store file so backward-compat path doesn't interfere
+    const legacyPath = join(mockStoreDir, 'mailtrap-store.json')
+    if (existsSync(legacyPath)) unlinkSync(legacyPath)
   } catch {
     // ignore
   }

@@ -3,8 +3,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
 import { randomUUID } from 'crypto'
-import type { AppSettings, SenderProfile } from './api/types'
-import { DEFAULT_SETTINGS } from './api/types'
+import type { AppSettings, SenderProfile, VendorCapabilities, VendorId } from './api/types'
+import { DEFAULT_SETTINGS, VENDOR_CAPABILITIES } from './api/types'
 
 function getStorePath(): string {
   const userDataPath = app.getPath('userData')
@@ -63,6 +63,7 @@ let storeCache: StoreData | null = null
  * Idempotent: does nothing if senders[] already has entries.
  */
 function migrateIfNeeded(store: StoreData): StoreData {
+  // Step 1: migrate legacy single-token to multi-sender format
   if (store.encryptedToken && (!store.senders || store.senders.length === 0)) {
     const profile: SenderProfile = {
       id: randomUUID(),
@@ -70,6 +71,7 @@ function migrateIfNeeded(store: StoreData): StoreData {
       encryptedToken: store.encryptedToken,
       accountId: store.accountId ?? 0,
       accountName: store.accountName ?? '',
+      vendor: 'mailtrap',
       createdAt: new Date().toISOString(),
     }
     store.senders = [profile]
@@ -79,6 +81,19 @@ function migrateIfNeeded(store: StoreData): StoreData {
     delete store.accountName
     writeStore(store)
   }
+
+  // Step 2: backfill vendor field on existing profiles
+  if (store.senders) {
+    let dirty = false
+    for (const profile of store.senders) {
+      if (!(profile as Record<string, unknown>).vendor) {
+        ;(profile as SenderProfile).vendor = 'mailtrap'
+        dirty = true
+      }
+    }
+    if (dirty) writeStore(store)
+  }
+
   return store
 }
 
@@ -394,4 +409,15 @@ export function getActiveSenderDisplayName(): string | null {
   if (!activeId) return null
   const sender = (store.senders ?? []).find(s => s.id === activeId)
   return sender?.displayName ?? null
+}
+
+/**
+ * Returns the VendorCapabilities for the currently active sender.
+ * Defaults to Mailtrap if no sender is active.
+ */
+export function getVendorCapabilities(): VendorCapabilities {
+  const senderId = getLastActiveSenderId()
+  const profile = senderId ? getSenderById(senderId) : null
+  const vendor: VendorId = profile?.vendor ?? 'mailtrap'
+  return VENDOR_CAPABILITIES[vendor]
 }
