@@ -18,7 +18,7 @@ export default function Port587Logo({ size = 'sm', vendor }: Port587LogoProps) {
       {vendor && (
         <VendorLogo vendor={vendor} className={`${vendorLogoClass} shrink-0 rounded-[3px]`} />
       )}
-      <span className={`${textClass} font-black tracking-wide`} style={{ fontFamily: "'Bodoni Moda', serif", color: '#EEDFC8' }}>PORT587</span>
+      <span className={`${textClass} font-black tracking-wide`} style={{ fontFamily: "'Libre Bodoni', serif", color: '#EEDFC8' }}>PORT587</span>
     </div>
   )
 }
