@@ -1,13 +1,15 @@
 # Port587
 
-A lightweight cross-platform desktop app for managing email senders. Monitor your email sending stats and test sandbox inboxes directly from your desktop. Currently supports [Mailtrap.io](https://mailtrap.io) with more senders coming soon.
+A lightweight cross-platform desktop app for managing email senders. Monitor your email sending stats and test sandbox inboxes directly from your desktop. Supports [Mailtrap](https://mailtrap.io), [SendGrid](https://sendgrid.com), and [Mailgun](https://www.mailgun.com).
 
 ## Features
 
+- **Multi-Vendor** — Connect Mailtrap, SendGrid, and Mailgun accounts
 - **Multi-Account** — Save multiple sender accounts, switch between them with one click
 - **System Tray Menu** — Quick-glance native menu showing sandbox inboxes (with unread counts and last email) and sending stats
-- **Email Testing** — Browse sandbox inboxes, view message lists, and render full HTML emails
-- **Email Sending** — View sending stats (sent, delivered, bounced) with trend charts
+- **Email Testing** — Browse sandbox inboxes, view message lists, and render full HTML emails (Mailtrap)
+- **Sending Stats** — View sending stats (sent, delivered, bounced) with trend charts
+- **Events & Suppressions** — Activity log and suppression lists (SendGrid, Mailgun)
 - **Settings** — Configurable polling interval, startup behavior, view toggles
 
 ## Prerequisites
@@ -50,8 +52,13 @@ This produces:
 
 ## Configuration
 
-On first launch, add a sender account with your API token. For Mailtrap, you can find it at:
-**[Mailtrap Settings > API Tokens](https://mailtrap.io/api-tokens)**
+On first launch, add a sender account with your API token:
+
+| Vendor | Where to find your token |
+|--------|--------------------------|
+| Mailtrap | [Settings > API Tokens](https://mailtrap.io/api-tokens) |
+| SendGrid | [Settings > API Keys](https://app.sendgrid.com/settings/api_keys) |
+| Mailgun | [API Security](https://app.mailgun.com/settings/api_security) |
 
 ## Architecture
 
