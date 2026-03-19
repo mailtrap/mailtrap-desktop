@@ -23,30 +23,39 @@ function AuthenticatedApp() {
   const [sandboxEnabled, setSandboxEnabled] = useState(true)
 
   useEffect(() => {
-    const loadSettings = (s: { defaultView?: string; sendingEnabled?: boolean; sandboxEnabled?: boolean }) => {
-      const sEnabled = s?.sendingEnabled !== false
-      const tEnabled = s?.sandboxEnabled !== false
-      setSendingEnabled(sEnabled)
-      setSandboxEnabled(tEnabled)
+    const loadSettings = async () => {
+      try {
+        const [s, caps] = await Promise.all([
+          window.electron.getSettings(),
+          window.electron.getCapabilities(),
+        ])
 
-      let view: string
-      if (s?.defaultView === 'sending' && sEnabled) {
-        view = '/sending'
-      } else if (tEnabled) {
-        view = '/sandbox'
-      } else if (sEnabled) {
-        view = '/sending'
-      } else {
-        view = '/settings'
+        const sEnabled = s?.sendingEnabled !== false && caps.sendingStats
+        const tEnabled = s?.sandboxEnabled !== false && caps.sandbox
+        setSendingEnabled(sEnabled)
+        setSandboxEnabled(tEnabled)
+
+        let view: string
+        if (s?.defaultView === 'sending' && sEnabled) {
+          view = '/sending'
+        } else if (tEnabled) {
+          view = '/sandbox'
+        } else if (sEnabled) {
+          view = '/sending'
+        } else {
+          view = '/settings'
+        }
+        setDefaultRoute(view)
+      } catch {
+        setDefaultRoute('/settings')
       }
-      setDefaultRoute(view)
     }
 
-    window.electron.getSettings().then(loadSettings)
+    loadSettings()
 
     const cleanup = window.electron.onNavigate((route) => {
       if (route === '__settings_changed') {
-        window.electron.getSettings().then(loadSettings)
+        loadSettings()
       }
     })
     return cleanup

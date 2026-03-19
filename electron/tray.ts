@@ -141,18 +141,6 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
   const settings = getSettings()
   const capabilities = getVendorCapabilities()
 
-  // ── Connected Sender Label (with vendor display name) ──
-  const senderDisplayName = getActiveSenderDisplayName()
-  if (senderDisplayName) {
-    const senderId = getLastActiveSenderId()
-    const profile = senderId ? getSenderById(senderId) : null
-    const vendorName = profile?.vendor ? VENDOR_DISPLAY_NAMES[profile.vendor] : undefined
-    const label = vendorName
-      ? `Connected as: ${senderDisplayName} (${vendorName})`
-      : `Connected as: ${senderDisplayName}`
-    menu.append(new MenuItem({ label, enabled: false }))
-    menu.append(new MenuItem({ type: 'separator' }))
-  }
 
   // ── Sandboxes Section (only for vendors with sandbox capability) ──
   if (capabilities.sandbox && settings.sandboxEnabled) {
@@ -220,7 +208,7 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
   if (settings.sendingEnabled) {
     menu.append(
       new MenuItem({
-        label: 'Stats',
+        label: 'Sending Stats',
         enabled: false
       })
     )
@@ -260,27 +248,7 @@ function rebuildTrayMenu(mainWindow: BrowserWindow): void {
   // ── Footer Section ──
   menu.append(
     new MenuItem({
-      label: 'Settings',
-      click: () => {
-        focusAndNavigate(mainWindow, 'settings')
-      }
-    })
-  )
-
-  menu.append(
-    new MenuItem({
-      label: 'Open Port587',
-      click: () => {
-        shell.openExternal('https://mailtrap.io')
-      }
-    })
-  )
-
-  menu.append(new MenuItem({ type: 'separator' }))
-
-  menu.append(
-    new MenuItem({
-      label: 'Quit Port587',
+      label: 'Quit',
       click: () => {
         app.quit()
       }

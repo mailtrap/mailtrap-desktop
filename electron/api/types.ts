@@ -35,7 +35,7 @@ export const VENDOR_CAPABILITIES: Record<VendorId, VendorCapabilities> = {
     vendor: 'sendgrid',
     sendingStats: true,
     dailyStats: true,
-    domainFilter: true,
+    domainFilter: false,
     categoryStats: false,
     providerStats: false,
     sandbox: false,

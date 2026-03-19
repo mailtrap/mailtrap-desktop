@@ -143,12 +143,12 @@ export default function SendingDash() {
     setRateLimited(false)
   }, [vendor])
 
-  // Default to "All Domains" once domains load
+  // Default to "All Domains" once domains load (or immediately if no domains)
   useEffect(() => {
-    if (domainItems.length > 0 && selectedDomainId === undefined) {
+    if (selectedDomainId === undefined && !domainsLoading) {
       setSelectedDomainId(null)
     }
-  }, [domainItems, selectedDomainId])
+  }, [domainItems, selectedDomainId, domainsLoading])
 
   useEffect(() => {
     if (selectedDomainId !== undefined) {
@@ -391,7 +391,7 @@ export default function SendingDash() {
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-heading-1 text-navy-air">Stats Overview</h1>
-          {domainItems.length > 0 && (
+          {domainItems.length > 0 && capabilities?.domainFilter && (
             <select
               value={selectedDomainId != null ? String(selectedDomainId) : 'all'}
               onChange={(e) => {
@@ -448,26 +448,20 @@ export default function SendingDash() {
         />
       )}
 
-      {domainItems.length === 0 ? (
+      {domainItems.length === 0 && isMailtrap ? (
         <div className="rounded-mtui border border-dashed border-grey-dark p-12 text-center">
           <p className="text-body text-grey-muted">
             No sending domains found.{' '}
-            {isMailtrap ? (
-              <>
-                Set up a domain in the{' '}
-                <a
-                  href="https://mailtrap.io/sending/domains"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-neutral underline hover:text-blue-medium"
-                >
-                  Mailtrap web app
-                </a>
-                .
-              </>
-            ) : (
-              'Configure a sending domain in your email service provider.'
-            )}
+            Set up a domain in the{' '}
+            <a
+              href="https://mailtrap.io/sending/domains"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-neutral underline hover:text-blue-medium"
+            >
+              Mailtrap web app
+            </a>
+            .
           </p>
         </div>
       ) : (

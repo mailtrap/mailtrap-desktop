@@ -20,6 +20,8 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
   const [secondaryToken, setSecondaryToken] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showToken, setShowToken] = useState(false)
+  const [showSecondaryToken, setShowSecondaryToken] = useState(false)
 
   const config = VENDOR_CONFIGS[selectedVendor]
 
@@ -195,15 +197,36 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
             >
               {config.tokenLabel}
             </label>
-            <input
-              id="apiToken"
-              type="password"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder={config.tokenPlaceholder}
-              className="input"
-              disabled={loading}
-            />
+            <div className="relative">
+              <input
+                id="apiToken"
+                type={showToken ? 'text' : 'password'}
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder={config.tokenPlaceholder}
+                className="input pr-10"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowToken((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-grey-muted hover:text-navy-air transition-colors"
+                aria-label={showToken ? 'Hide token' : 'Show token'}
+                aria-pressed={showToken}
+              >
+                {showToken ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                    <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.092 1.092a4 4 0 00-5.558-5.558z" clipRule="evenodd" />
+                    <path d="M10.748 13.93l2.523 2.523A9.987 9.987 0 0110 17c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 012.04-3.73l1.838 1.837A4 4 0 0010.748 13.93z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                    <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                    <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Postmark secondary token */}
@@ -215,15 +238,36 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
               >
                 {config.secondaryTokenLabel}
               </label>
-              <input
-                id="secondaryToken"
-                type="password"
-                value={secondaryToken}
-                onChange={(e) => setSecondaryToken(e.target.value)}
-                placeholder={config.secondaryTokenPlaceholder}
-                className="input"
-                disabled={loading}
-              />
+              <div className="relative">
+                <input
+                  id="secondaryToken"
+                  type={showSecondaryToken ? 'text' : 'password'}
+                  value={secondaryToken}
+                  onChange={(e) => setSecondaryToken(e.target.value)}
+                  placeholder={config.secondaryTokenPlaceholder}
+                  className="input pr-10"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecondaryToken((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-grey-muted hover:text-navy-air transition-colors"
+                  aria-label={showSecondaryToken ? 'Hide token' : 'Show token'}
+                  aria-pressed={showSecondaryToken}
+                >
+                  {showSecondaryToken ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.092 1.092a4 4 0 00-5.558-5.558z" clipRule="evenodd" />
+                      <path d="M10.748 13.93l2.523 2.523A9.987 9.987 0 0110 17c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 012.04-3.73l1.838 1.837A4 4 0 0010.748 13.93z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                      <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               {config.secondaryTokenHelpText && (
                 <p className="mt-1 text-body-s text-grey-muted">
                   {config.secondaryTokenHelpText}
