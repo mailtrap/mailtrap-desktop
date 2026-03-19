@@ -131,9 +131,10 @@ export default function EventsView() {
       {events.length === 0 ? (
         <div className="rounded-mtui border border-dashed border-grey-dark p-12 text-center">
           <p className="text-body text-grey-muted">
-            {vendor === 'sendgrid' ? (
+            No events found.
+            {vendor === 'sendgrid' && (
               <>
-                No events available. SendGrid requires the{' '}
+                {' '}This feature requires the{' '}
                 <a
                   href="https://sendgrid.com/solutions/email-api/email-activity-feed/"
                   target="_blank"
@@ -142,10 +143,8 @@ export default function EventsView() {
                 >
                   Email Activity Feed
                 </a>
-                {' '}add-on to access event data.
+                {' '}add-on.
               </>
-            ) : (
-              'No events found for this period.'
             )}
           </p>
         </div>

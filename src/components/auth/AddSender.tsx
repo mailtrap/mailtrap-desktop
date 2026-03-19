@@ -211,8 +211,8 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
                 type="button"
                 onClick={() => setShowToken((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-grey-muted hover:text-navy-air transition-colors"
-                tabIndex={-1}
                 aria-label={showToken ? 'Hide token' : 'Show token'}
+                aria-pressed={showToken}
               >
                 {showToken ? (
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -252,8 +252,8 @@ export default function AddSender({ onBack, onSuccess }: AddSenderProps) {
                   type="button"
                   onClick={() => setShowSecondaryToken((v) => !v)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-grey-muted hover:text-navy-air transition-colors"
-                  tabIndex={-1}
                   aria-label={showSecondaryToken ? 'Hide token' : 'Show token'}
+                  aria-pressed={showSecondaryToken}
                 >
                   {showSecondaryToken ? (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">

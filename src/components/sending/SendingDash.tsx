@@ -391,7 +391,7 @@ export default function SendingDash() {
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-heading-1 text-navy-air">Stats Overview</h1>
-          {domainItems.length > 0 && (
+          {domainItems.length > 0 && capabilities?.domainFilter && (
             <select
               value={selectedDomainId != null ? String(selectedDomainId) : 'all'}
               onChange={(e) => {

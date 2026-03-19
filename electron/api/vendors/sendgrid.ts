@@ -203,15 +203,12 @@ export const sendgridConnector: VendorConnector = {
   ): Promise<EmailEvent[]> {
     // SendGrid Email Activity Feed requires a paid add-on.
     // Use a short timeout — without the add-on the endpoint hangs.
-    const client = axios.create({
-      baseURL: 'https://api.sendgrid.com',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      timeout: 5000,
-    })
+    const client = makeClient(token)
     try {
       const limit = 100
       const { data } = await client.get('/v3/messages', {
         params: { limit, query: `last_event_time BETWEEN TIMESTAMP "2000-01-01T00:00:00Z" AND TIMESTAMP "2099-12-31T23:59:59Z"` },
+        timeout: 5000,
       })
       if (!data?.messages || !Array.isArray(data.messages)) return []
 

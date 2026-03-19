@@ -24,27 +24,31 @@ function AuthenticatedApp() {
 
   useEffect(() => {
     const loadSettings = async () => {
-      const [s, caps] = await Promise.all([
-        window.electron.getSettings(),
-        window.electron.getCapabilities(),
-      ])
+      try {
+        const [s, caps] = await Promise.all([
+          window.electron.getSettings(),
+          window.electron.getCapabilities(),
+        ])
 
-      const sEnabled = s?.sendingEnabled !== false && caps.sendingStats
-      const tEnabled = s?.sandboxEnabled !== false && caps.sandbox
-      setSendingEnabled(sEnabled)
-      setSandboxEnabled(tEnabled)
+        const sEnabled = s?.sendingEnabled !== false && caps.sendingStats
+        const tEnabled = s?.sandboxEnabled !== false && caps.sandbox
+        setSendingEnabled(sEnabled)
+        setSandboxEnabled(tEnabled)
 
-      let view: string
-      if (s?.defaultView === 'sending' && sEnabled) {
-        view = '/sending'
-      } else if (tEnabled) {
-        view = '/sandbox'
-      } else if (sEnabled) {
-        view = '/sending'
-      } else {
-        view = '/settings'
+        let view: string
+        if (s?.defaultView === 'sending' && sEnabled) {
+          view = '/sending'
+        } else if (tEnabled) {
+          view = '/sandbox'
+        } else if (sEnabled) {
+          view = '/sending'
+        } else {
+          view = '/settings'
+        }
+        setDefaultRoute(view)
+      } catch {
+        setDefaultRoute('/settings')
       }
-      setDefaultRoute(view)
     }
 
     loadSettings()
