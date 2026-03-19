@@ -44,12 +44,8 @@ export const sendgridConnector: VendorConnector = {
   async validateToken(token: string): Promise<{ accountId: string; accountName: string }> {
     const client = makeClient(token)
     try {
-      const { data } = await client.get('/v3/user/account')
-      const name = [data?.first_name, data?.last_name].filter(Boolean).join(' ') || 'SendGrid Account'
-      return {
-        accountId: `sendgrid_${tokenHash(token)}`,
-        accountName: name,
-      }
+      // /v3/scopes works with any valid API key regardless of permissions
+      await client.get('/v3/scopes')
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         if (err.response?.status === 401 || err.response?.status === 403) {
@@ -60,6 +56,21 @@ export const sendgridConnector: VendorConnector = {
         }
       }
       throw err
+    }
+
+    // Try to get account name, fall back gracefully
+    let name = 'SendGrid Account'
+    try {
+      const { data } = await client.get('/v3/user/account')
+      const fullName = [data?.first_name, data?.last_name].filter(Boolean).join(' ')
+      if (fullName) name = fullName
+    } catch {
+      // Insufficient permissions for user/account — use default name
+    }
+
+    return {
+      accountId: `sendgrid_${tokenHash(token)}`,
+      accountName: name,
     }
   },
 
@@ -190,10 +201,14 @@ export const sendgridConnector: VendorConnector = {
     _domainId: string | null,
     page: number
   ): Promise<EmailEvent[]> {
-    const client = makeClient(token)
+    // SendGrid Email Activity Feed requires a paid add-on.
+    // Use a short timeout — without the add-on the endpoint hangs.
+    const client = axios.create({
+      baseURL: 'https://api.sendgrid.com',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      timeout: 5000,
+    })
     try {
-      // SendGrid Email Activity Feed — requires the add-on.
-      // Pagination: use offset-based (limit * (page - 1))
       const limit = 100
       const { data } = await client.get('/v3/messages', {
         params: { limit, query: `last_event_time BETWEEN TIMESTAMP "2000-01-01T00:00:00Z" AND TIMESTAMP "2099-12-31T23:59:59Z"` },
@@ -214,12 +229,13 @@ export const sendgridConnector: VendorConnector = {
         subject: msg.subject,
       }))
     } catch (err: unknown) {
-      // 403/404 = Email Activity Feed not enabled; return empty gracefully
-      if (axios.isAxiosError(err) && (err.response?.status === 403 || err.response?.status === 404)) {
-        return []
-      }
-      if (axios.isAxiosError(err) && err.response?.status === 429) {
-        throw new Error('Rate limit exceeded (429). Please try again later.')
+      // 403/404 = Email Activity Feed not enabled; timeout = add-on not available
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 403 || err.response?.status === 404) return []
+        if (err.code === 'ECONNABORTED') return []
+        if (err.response?.status === 429) {
+          throw new Error('Rate limit exceeded (429). Please try again later.')
+        }
       }
       throw err
     }

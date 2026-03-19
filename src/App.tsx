@@ -23,9 +23,14 @@ function AuthenticatedApp() {
   const [sandboxEnabled, setSandboxEnabled] = useState(true)
 
   useEffect(() => {
-    const loadSettings = (s: { defaultView?: string; sendingEnabled?: boolean; sandboxEnabled?: boolean }) => {
-      const sEnabled = s?.sendingEnabled !== false
-      const tEnabled = s?.sandboxEnabled !== false
+    const loadSettings = async () => {
+      const [s, caps] = await Promise.all([
+        window.electron.getSettings(),
+        window.electron.getCapabilities(),
+      ])
+
+      const sEnabled = s?.sendingEnabled !== false && caps.sendingStats
+      const tEnabled = s?.sandboxEnabled !== false && caps.sandbox
       setSendingEnabled(sEnabled)
       setSandboxEnabled(tEnabled)
 
@@ -42,11 +47,11 @@ function AuthenticatedApp() {
       setDefaultRoute(view)
     }
 
-    window.electron.getSettings().then(loadSettings)
+    loadSettings()
 
     const cleanup = window.electron.onNavigate((route) => {
       if (route === '__settings_changed') {
-        window.electron.getSettings().then(loadSettings)
+        loadSettings()
       }
     })
     return cleanup

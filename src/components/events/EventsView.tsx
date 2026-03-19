@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../ui/Button'
+import { useAppStore } from '../../stores/appStore'
 import type { EmailEvent, VendorCapabilities } from '../../../electron/api/types'
 
 function eventColor(event: string): string {
@@ -30,6 +31,7 @@ function formatDate(iso: string): string {
 }
 
 export default function EventsView() {
+  const vendor = useAppStore((s) => s.vendor)
   const [capabilities, setCapabilities] = useState<VendorCapabilities | null>(null)
   const [events, setEvents] = useState<EmailEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -129,7 +131,22 @@ export default function EventsView() {
       {events.length === 0 ? (
         <div className="rounded-mtui border border-dashed border-grey-dark p-12 text-center">
           <p className="text-body text-grey-muted">
-            No events found for this period.
+            {vendor === 'sendgrid' ? (
+              <>
+                No events available. SendGrid requires the{' '}
+                <a
+                  href="https://sendgrid.com/solutions/email-api/email-activity-feed/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-neutral underline hover:text-blue-medium"
+                >
+                  Email Activity Feed
+                </a>
+                {' '}add-on to access event data.
+              </>
+            ) : (
+              'No events found for this period.'
+            )}
           </p>
         </div>
       ) : (
