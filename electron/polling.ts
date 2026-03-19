@@ -134,27 +134,38 @@ async function pollSending(): Promise<void> {
 
       const domains = await connector.getDomains(connectorToken)
 
-      // Concurrency limit: process domains in batches of 3
-      const results: SendingStreamSummary[] = []
-      for (let i = 0; i < domains.length; i += 3) {
-        const batch = domains.slice(i, i + 3)
-        const batchResults = await Promise.allSettled(
-          batch.map(d =>
-            connector.getAggregatedStats(connectorToken, startDate, endDate, d.id)
+      if (domains.length === 0) {
+        // No domains — fetch account-wide stats (e.g. SendGrid)
+        const stats = await connector.getAggregatedStats(connectorToken, startDate, endDate, null)
+        streams = [{
+          id: 'all',
+          name: 'All Sending',
+          sentCount: stats.delivery_count + stats.bounce_count,
+          deliveryRate: stats.delivery_rate * 100,
+        }]
+      } else {
+        // Concurrency limit: process domains in batches of 3
+        const results: SendingStreamSummary[] = []
+        for (let i = 0; i < domains.length; i += 3) {
+          const batch = domains.slice(i, i + 3)
+          const batchResults = await Promise.allSettled(
+            batch.map(d =>
+              connector.getAggregatedStats(connectorToken, startDate, endDate, d.id)
+            )
           )
-        )
-        batchResults.forEach((r, j) => {
-          const d = batch[j]
-          const stats = r.status === 'fulfilled' ? r.value : null
-          results.push({
-            id: d.id,
-            name: d.name,
-            sentCount: stats ? stats.delivery_count + stats.bounce_count : 0,
-            deliveryRate: stats ? stats.delivery_rate * 100 : null,
+          batchResults.forEach((r, j) => {
+            const d = batch[j]
+            const stats = r.status === 'fulfilled' ? r.value : null
+            results.push({
+              id: d.id,
+              name: d.name,
+              sentCount: stats ? stats.delivery_count + stats.bounce_count : 0,
+              deliveryRate: stats ? stats.delivery_rate * 100 : null,
+            })
           })
-        })
+        }
+        streams = results
       }
-      streams = results
     }
 
     latestStreams = streams

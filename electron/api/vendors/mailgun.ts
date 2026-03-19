@@ -11,12 +11,15 @@ import type {
 // US region only — EU region (api.eu.mailgun.net) is not auto-detected.
 const MAILGUN_BASE_URL = 'https://api.mailgun.net'
 
+const STAT_EVENTS = ['accepted', 'delivered', 'failed', 'opened', 'clicked', 'complained']
+
 function makeClient(token: string): AxiosInstance {
   return axios.create({
     baseURL: MAILGUN_BASE_URL,
     auth: { username: 'api', password: token },
     headers: { 'Content-Type': 'application/json' },
     timeout: 15000,
+    paramsSerializer: { indexes: null },
   })
 }
 
@@ -130,9 +133,9 @@ export const mailgunConnector: VendorConnector = {
     try {
       const { data } = await client.get(`/v3/${domain}/stats/total`, {
         params: {
-          event: 'accepted,delivered,failed,opened,clicked,complained',
-          start: startDate,
-          end: endDate,
+          event: STAT_EVENTS,
+          start: Math.floor(new Date(startDate).getTime() / 1000),
+          end: Math.floor(new Date(endDate + 'T23:59:59Z').getTime() / 1000),
           resolution: 'day',
         },
       })
@@ -287,7 +290,7 @@ async function fetchDomainRawCounts(
   try {
     const { data } = await client.get(`/v3/${domain}/stats/total`, {
       params: {
-        event: 'accepted,delivered,failed,opened,clicked,complained',
+        event: STAT_EVENTS,
         duration,
       },
     })
